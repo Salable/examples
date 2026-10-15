@@ -1,0 +1,85 @@
+product:
+  name: Image Generator PAYG
+  archivedAt: null
+  isActive: true
+  settings:
+    cancelUrl: null
+    successUrl: null
+    allowPromoCodes: false
+    automaticTax: false
+    collectBillingAddress: false
+    collectShippingAddress: false
+    cardPrefillPreference: none
+    pastDueEntitlements: true
+entitlements:
+  - name: image_generations
+plans:
+  - name: Pro
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    entitlements:
+      - image_generations
+    lineItems:
+      # Included generations: 1,000 image_generations tokens every billing
+      # cycle, reset at the start of each cycle. Consumed first.
+      - name: Included generations
+        slug: pro_image_tokens
+        nickname: ''
+        priceType: token
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: true
+        maxQuantity: null
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        tokenSlug: image_generations
+        tokenQuantity: 1000
+        tokenResetBehaviour: reset
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 2900
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+      # Overage generations: once the token balance is exhausted, each image
+      # is recorded against the image_generations meter and billed at period
+      # end.
+      - name: Overage generations
+        slug: pro_image_overage
+        nickname: ''
+        priceType: metered
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: image_generations
+        unitLabel: per image
+        tokenSlug: null
+        tokenQuantity: null
+        tokenResetBehaviour: null
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 10
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
