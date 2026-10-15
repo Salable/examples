@@ -1,0 +1,90 @@
+product:
+  name: Starter
+  archivedAt: null
+  isActive: true
+  settings:
+    cancelUrl: null
+    successUrl: null
+    allowPromoCodes: false
+    automaticTax: false
+    collectBillingAddress: false
+    collectShippingAddress: false
+    cardPrefillPreference: none
+    pastDueEntitlements: true
+entitlements:
+  - name: generate_images
+  - name: export_hd
+plans:
+  - name: Starter
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    entitlements:
+      - generate_images
+      - export_hd
+    lineItems:
+      - name: Starter
+        slug: starter
+        nickname: ''
+        priceType: token
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: true
+        maxQuantity: null
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        tokenSlug: image_tokens
+        tokenQuantity: 1000
+        tokenResetBehaviour: reset
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 2900
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
+  - name: Token Top-Up
+    isActive: true
+    isPerpetual: true
+    trialPeriodDays: null
+    entitlements:
+      - generate_images
+    lineItems:
+      - name: Token Top-Up
+        slug: token_topup
+        nickname: ''
+        priceType: token
+        intervalType: one_off
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: true
+        maxQuantity: null
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        tokenSlug: image_tokens
+        tokenQuantity: 1000
+        tokenResetBehaviour: null
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: null
+            intervalCount: null
+            currencyOptions:
+              - currency: USD
+                unitAmount: 2900
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null

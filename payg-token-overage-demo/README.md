@@ -1,6 +1,6 @@
 # Salable PAYG Token Overage
 
-A simple demo of pay-as-you-go overage with Salable. A monthly plan grants an allowance of tokens, and once the customer has consumed them all, further usage is recorded against a meter and billed at the end of the period. It combines the [token billing](https://salable.app/docs/token-billing) and [metered usage](https://salable.app/docs/metered-usage) models in one subscription, building on the [token quick start](https://github.com/Salable/token-quick-start) and [usage quick start](https://github.com/Salable/usage-quick-start) demos.
+A simple demo of pay-as-you-go overage with Salable. A monthly plan grants an allowance of tokens, and once the customer has consumed them all, further usage is recorded against a meter and billed at the end of the period. It combines the [token billing](https://salable.app/docs/token-billing) and [metered usage](https://salable.app/docs/metered-usage) models in one subscription, building on the [token quick start](../token-quick-start-demo) and [usage quick start](../usage-quick-start-demo) demos.
 
 ## What's included?
 
@@ -17,11 +17,11 @@ A simple demo of pay-as-you-go overage with Salable. A monthly plan grants an al
 
 - **A Salable account.** Sign up at [salable.app](https://salable.app/auth/sign-in).
 - **Node.js 22 or later and npm.**
-- **This repository cloned locally and installed dependencies.**
+- **This demo copied locally and installed dependencies.** The demo lives in the [Salable examples](https://github.com/Salable/examples) repository alongside other demos. Use [degit](https://github.com/Rich-Harris/degit) to copy just this directory without cloning the whole repository.
 
   ```bash
-  git clone git@github.com:Salable/payg-token-overage.git
-  cd payg-token-overage
+  npx degit Salable/examples/payg-token-overage-demo payg-token-overage-demo
+  cd payg-token-overage-demo
   npm install
   ```
 
@@ -93,7 +93,7 @@ A simple demo of pay-as-you-go overage with Salable. A monthly plan grants an al
 - **Generate returns 403 even though you just bought Pro.** The webhook may still be in flight. Wait a few seconds, or press _Refresh_.
 - **Generate returns "Salable has no usage record".** The balance was exhausted, but Salable has not yet created the usage record for the Pro subscription. Wait a few seconds and try again. If it persists, the owner does not hold a Pro subscription.
 - **The overage count has not changed after generating.** Usage is queued and processed in the background, which can take around half a minute. Press _Refresh_ after a short wait. Token consumption, by contrast, is reflected immediately.
-- **Entitlements or subscriptions you did not buy appear.** The [token quick start](https://github.com/Salable/token-quick-start) and [usage quick start](https://github.com/Salable/usage-quick-start) demos use the same `company_acme` owner and `user_alice` grantee. If you have run either in the same Salable organisation, its subscriptions are listed under the same owner and _Reset demo_ in any of the demos deletes all of them.
+- **Entitlements or subscriptions you did not buy appear.** The [token quick start](../token-quick-start-demo) and [usage quick start](../usage-quick-start-demo) demos use the same `company_acme` owner and `user_alice` grantee. If you have run either in the same Salable organisation, its subscriptions are listed under the same owner and _Reset demo_ in any of the demos deletes all of them.
 - **Subscribe to Pro says the owner is already subscribed to metered plan items.** Salable prevents a second subscription to the same meter, even after a cancellation. Press _Reset demo_ to delete the cancelled subscription, then subscribe again.
 
 ## Further Reading

@@ -1,0 +1,52 @@
+product:
+  name: Image Generator
+  archivedAt: null
+  isActive: true
+  settings:
+    cancelUrl: null
+    successUrl: null
+    allowPromoCodes: false
+    automaticTax: false
+    collectBillingAddress: false
+    collectShippingAddress: false
+    cardPrefillPreference: none
+    pastDueEntitlements: true
+entitlements:
+  - name: image_generations
+  - name: high_resolution_exports
+  - name: priority_processing
+plans:
+  - name: Pro
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    entitlements:
+      - image_generations
+      - high_resolution_exports
+      - priority_processing
+    lineItems:
+      - name: Image generations
+        slug: pro_image_generations
+        nickname: ''
+        priceType: metered
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: image_generations
+        unitLabel: per image
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 10
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
