@@ -52,10 +52,19 @@ plans:
     archivedAt: null
   - name: Token Top-Up
     isActive: true
+    # Mirrors ticking "Create a perpetual subscription" in the dashboard. The
+    # guide treats this as optional: a top-up purchase always produces a receipt
+    # and a token record, and the tokens can be spent while Starter is valid.
+    # The perpetual subscription is only needed so top-up buyers keep access
+    # to image_tokens without (or after) a Starter subscription.
     isPerpetual: true
     trialPeriodDays: null
+    # export_hd is deliberately left off so only Starter unlocks Export HD. Add
+    # it here if top-up buyers should receive it too.
     entitlements: []
     lineItems:
+      # One-off token line items always accumulate and the token record never
+      # expires, which is why tokenResetBehaviour and tokenExpiryDays are null.
       - name: Token Top-Up
         slug: token_topup
         nickname: ''

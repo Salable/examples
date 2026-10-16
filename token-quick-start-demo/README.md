@@ -5,7 +5,7 @@ A simple demo following the [Salable Token Quick Start](https://salable.app/docs
 ## What's included?
 
 - **Selling a recurring token plan.** A monthly _Starter_ subscription that grants 1,000 `image_tokens` every billing cycle and unlocks the `export_hd` entitlement. It is the only plan that grants `export_hd` and enables the associated feature.
-- **Selling a one-off top-up.** A one-off _Token Top-Up_ plan that adds 1,000 tokens. Each purchase creates a [perpetual subscription](https://salable.app/docs/subscriptions-and-billing#perpetual-subscriptions), so the `image_tokens` token stays in the entitlement check and a one-off purchase can also consume tokens.
+- **Selling a one-off top-up.** A one-off _Token Top-Up_ plan that adds 1,000 tokens. On its own a top-up purchase only produces a receipt and a token record; those tokens can be spent while the Starter subscription is valid but do not grant access by themselves. This demo's top-up plan has "Create a perpetual subscription" enabled (`isPerpetual: true` in `product.yaml`), so each purchase also creates a [perpetual subscription](https://salable.app/docs/subscriptions-and-billing#perpetual-subscriptions) that keeps `image_tokens` in the entitlement check without Starter. It deliberately does not carry `export_hd`.
 - **Feature gating.** The ability to consume tokens is locked until an [owner-scoped entitlement check](https://salable.app/docs/check-entitlements) returns the `image_tokens` token (an entry with `type: 'token'` and `value: 'image_tokens'`). No separate entitlement is created for it. The example "Export HD" feature is locked until the grantee has the `export_hd` entitlement.
 - **Consuming tokens.** Spend any number of tokens from the available balance, with an `Idempotency-Key` on every request so a retried call can never double-charge.
 - **Handling empty balances.** Attempting to consume more tokens than you hold returns the error "Insufficient token balance".
@@ -80,10 +80,11 @@ A simple demo following the [Salable Token Quick Start](https://salable.app/docs
 
 5. **Buy top-up tokens.** Press _Buy 1,000 tokens_ in the Top-Up panel. Pay with Stripe's test card `4242 4242 4242 4242`, any future expiry, and any CVC.
    - Observe your token balance was incremented by 1,000
+   - The records now show the Starter record with an expiry date alongside the top-up record with no expiry (_Never_). Access still comes from the Starter subscription at this point; the top-up's perpetual subscription only matters once Starter ends.
 
 6. **Consume more tokens.** Enter `50` and press _Consume_. The balance drops and the records' remaining amount updates. Consuming tokens uses the token balances in order of expiration, starting with the soonest, then the furthest expiry before finally using records with no expiry. Once a record is fully consumed, it is no longer returned.
 
-7. **Manage the subscription.** Press _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore. Then press _Cancel subscription_ and confirm. Once cancelled, the `export_hd` entitlement is removed from the grantee and the Export HD feature is locked again. The Consume panel stays unlocked because the top-up's perpetual subscription still puts `image_tokens` in the entitlement check, and the tokens already granted remain in the balance until they expire.
+7. **Manage the subscription.** Press _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore. Then press _Cancel subscription_ and confirm. Once cancelled, the `export_hd` entitlement is removed from the grantee and the Export HD feature is locked again. The Consume panel stays unlocked because this demo's top-up plan was configured as perpetual, so its subscription still puts `image_tokens` in the entitlement check. Had the top-up been a plain one-off, consuming would be locked too, even though the tokens already granted remain in the balance until they expire.
 
 8. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the seeded products and plans.
 
@@ -91,7 +92,7 @@ A simple demo following the [Salable Token Quick Start](https://salable.app/docs
 
 - **"Salable could not be reached" on load.** `SALABLE_SECRET_KEY` or a plan ID is missing from `.env.local`, or the key is not a test mode key (Salable answers _Unauthenticated_). Check the values and restart `npm run dev`.
 - **Nothing changes after checkout.** Press _Refresh_ after a moment to refetch the data from Salable.
-- **Consume returns 403 even though you just bought a plan.** The webhook may still be in flight. Wait a few seconds, or press _Refresh_. If it persists, the entitlement check is not returning an `image_tokens` entry with `type: 'token'`; confirm the plan has a token line item on `image_tokens` and the check is passing the `owner`.
+- **Consume returns 403 even though you just bought a plan.** The webhook may still be in flight. Wait a few seconds, or press _Refresh_. If it persists, the entitlement check is not returning an `image_tokens` entry with `type: 'token'`; confirm the owner holds a valid subscription for a plan with a token line item on `image_tokens` and the check is passing the `owner`. A receipt and token record alone do not grant access.
 
 ## Further Reading
 

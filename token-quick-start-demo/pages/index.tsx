@@ -298,8 +298,9 @@ export default function Home({
                       token for{' '}
                       <code className="font-mono text-xs">{GRANTEE}</code>,
                       returned by an owner-scoped entitlement check. Both plans
-                      have a line item on it, so no separate entitlement is
-                      needed.
+                      grant it through a subscription (Starter&apos;s recurring
+                      one, the top-up&apos;s perpetual one), so no separate
+                      entitlement is needed.
                     </>
                   }
                   badge={
@@ -440,10 +441,10 @@ export default function Home({
                   </Panel>
                 )}
 
-                {/* Step 4 again, one-off variant. Each purchase creates a perpetual subscription, so it works without Starter. */}
+                {/* Step 4 again, one-off variant. The plan is configured with a perpetual subscription, so it works without Starter. */}
                 <Panel
                   title="Token Top-Up"
-                  description="$29 one-off. Adds 1,000 image_tokens and creates a perpetual subscription, so image_tokens stays in the entitlement check and consuming works without Starter."
+                  description="$29 one-off. Adds 1,000 image_tokens with no expiry. This plan is configured with a perpetual subscription, so image_tokens stays in the entitlement check and consuming works without Starter."
                   badge={<Badge tone="zinc">One-off</Badge>}
                 >
                   <div className="space-y-3">

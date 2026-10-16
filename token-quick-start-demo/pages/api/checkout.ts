@@ -37,9 +37,12 @@ async function POST(
   try {
     // Step 4: Generate a Stripe Checkout link.
     // The top-up is a one-off purchase, so interval and intervalCount are null.
-    // Salable still creates a (perpetual) subscription for it, which is what
-    // makes its image_tokens line item show up in the owner-scoped
-    // entitlement check without a Starter subscription.
+    // Paying for it produces a receipt and a token record. Because the plan
+    // has "Create a perpetual subscription" enabled (isPerpetual in
+    // product.yaml), Salable also creates a perpetual subscription, which is
+    // what keeps image_tokens in the owner-scoped entitlement check without a
+    // Starter subscription. Without that setting the tokens could still be
+    // spent while Starter is valid, but would not grant access on their own.
     const response = await getSalable().api.checkout.post({
       planId: getPlanIds()[plan],
       owner: OWNER,
