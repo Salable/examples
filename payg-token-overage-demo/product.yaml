@@ -11,15 +11,13 @@ product:
     collectShippingAddress: false
     cardPrefillPreference: none
     pastDueEntitlements: true
-entitlements:
-  - name: image_generations
+entitlements: []
 plans:
   - name: Pro
     isActive: true
     isPerpetual: false
     trialPeriodDays: null
-    entitlements:
-      - image_generations
+    entitlements: []
     lineItems:
       # Included generations: 1,000 image_generations tokens every billing
       # cycle, reset at the start of each cycle. Consumed first.

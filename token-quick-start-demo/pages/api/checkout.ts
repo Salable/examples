@@ -38,7 +38,8 @@ async function POST(
     // Step 4: Generate a Stripe Checkout link.
     // The top-up is a one-off purchase, so interval and intervalCount are null.
     // Salable still creates a (perpetual) subscription for it, which is what
-    // grants the generate_images entitlement.
+    // makes its image_tokens line item show up in the owner-scoped
+    // entitlement check without a Starter subscription.
     const response = await getSalable().api.checkout.post({
       planId: getPlanIds()[plan],
       owner: OWNER,

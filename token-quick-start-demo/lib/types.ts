@@ -13,12 +13,18 @@ import type { apiErrorSchema } from './schemas'
 // `Required<Pick<>>`. Identifiers and totals the page relies on are
 // additionally non-null.
 
-export type Entitlement = Required<
-  Pick<
-    CheckEntitlementsSchema_data_entitlements,
-    'value' | 'type' | 'expiryDate'
-  >
->
+/** What an entry in the entitlement check represents. Token and meter entries are only returned for owner-scoped checks. */
+export type EntitlementType = 'entitlement' | 'meter' | 'token'
+
+export type Entitlement = Omit<
+  Required<
+    Pick<
+      CheckEntitlementsSchema_data_entitlements,
+      'value' | 'type' | 'expiryDate'
+    >
+  >,
+  'type'
+> & { type: EntitlementType | null }
 
 export type Subscription = Required<
   Pick<

@@ -12,7 +12,6 @@ product:
     cardPrefillPreference: none
     pastDueEntitlements: true
 entitlements:
-  - name: image_generations
   - name: high_resolution_exports
   - name: priority_processing
 plans:
@@ -21,7 +20,6 @@ plans:
     isPerpetual: false
     trialPeriodDays: null
     entitlements:
-      - image_generations
       - high_resolution_exports
       - priority_processing
     lineItems:

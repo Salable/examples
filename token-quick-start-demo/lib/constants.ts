@@ -2,9 +2,12 @@
 // https://salable.app/docs/token-quick-start?lang=sdk
 export const OWNER = 'company_acme'
 export const GRANTEE = 'user_alice'
+/**
+ * Both plans have a line item on this token. An owner-scoped entitlement check
+ * returns it as `{ type: 'token', value: 'image_tokens' }`, which is what
+ * unlocks consuming; no separate entitlement is needed.
+ */
 export const TOKEN_SLUG = 'image_tokens'
-/** Granted by both plans: unlocks consuming tokens. */
-export const GENERATE_ENTITLEMENT = 'generate_images'
 /** Granted by the Starter plan only: unlocks the Export HD feature. */
 export const EXPORT_HD_ENTITLEMENT = 'export_hd'
 

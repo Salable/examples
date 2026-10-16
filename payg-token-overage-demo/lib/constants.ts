@@ -9,11 +9,14 @@ export const GRANTEE = 'user_alice'
  * The Pro plan's token line item grants tokens under this slug and its metered
  * line item records usage against a meter with the same slug. Consuming tries
  * the tokens first and falls back to the meter once they are exhausted.
+ *
+ * An owner-scoped entitlement check returns both as separate entries with
+ * this value: `{ type: 'token', ... }` and `{ type: 'meter', ... }`. Checking
+ * type as well as value is what tells them apart, and together they unlock
+ * generating images; no separate entitlement is needed.
  */
 export const TOKEN_SLUG = 'image_generations'
 export const METER_SLUG = 'image_generations'
-/** Granted by the Pro plan: unlocks consuming tokens and recording overage. */
-export const GENERATE_ENTITLEMENT = 'image_generations'
 /** Tokens the Pro plan grants each billing cycle. */
 export const INCLUDED_TOKENS = 1000
 /** The Pro plan's monthly price for the included tokens, in cents. */

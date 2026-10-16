@@ -15,7 +15,6 @@ import { Panel } from '@/components/Panel'
 import { useApiForm } from '@/hooks/useApiForm'
 import {
   EXPORT_HD_ENTITLEMENT,
-  GENERATE_ENTITLEMENT,
   GRANTEE,
   METER_SLUG,
   OWNER,
@@ -157,11 +156,13 @@ export default function Home({
     window.setTimeout(() => setExportHd('done'), 1_200)
   }
 
-  // Step 4 of the guide: the grantee has access if the entitlement is present.
-  // The Pro plan grants both image_generations and high_resolution_exports.
+  // Step 4 of the guide: the owner-scoped check returns the image_generations
+  // meter slug with type 'meter' while the Pro subscription is active. Check
+  // both type and value, because a token can share a meter's slug. Export HD
+  // is gated on a plain entitlement the Pro plan also grants.
   const canGenerate =
     entitlements.data?.entitlements.some(
-      (e) => e.value === GENERATE_ENTITLEMENT
+      (e) => e.type === 'meter' && e.value === METER_SLUG
     ) ?? false
   const canExportHd =
     entitlements.data?.entitlements.some(
@@ -303,21 +304,18 @@ export default function Home({
           <>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-6">
-                {/* Steps 3 and 4: the entitlement check gates the generate form. */}
+                {/* Steps 3 and 4: the owner-scoped entitlement check gates the generate form. */}
                 <Panel
                   title="Generate images"
                   description={
                     <>
                       Gated by the{' '}
-                      <code className="font-mono text-xs">
-                        {GENERATE_ENTITLEMENT}
-                      </code>{' '}
-                      entitlement for{' '}
-                      <code className="font-mono text-xs">{GRANTEE}</code>. The
-                      Pro plan grants it. Each generation is recorded as usage
-                      against the{' '}
                       <code className="font-mono text-xs">{METER_SLUG}</code>{' '}
-                      meter.
+                      meter for{' '}
+                      <code className="font-mono text-xs">{GRANTEE}</code>,
+                      returned by an owner-scoped entitlement check while the
+                      Pro plan is active. No separate entitlement is needed.
+                      Each generation is recorded as usage against the meter.
                     </>
                   }
                   badge={
@@ -338,11 +336,9 @@ export default function Home({
                     <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
                       <p>
                         <span className="font-mono text-xs">{GRANTEE}</span>{' '}
-                        does not have the{' '}
-                        <span className="font-mono text-xs">
-                          {GENERATE_ENTITLEMENT}
-                        </span>{' '}
-                        entitlement, so the generation UI stays hidden.
+                        does not have access to the{' '}
+                        <span className="font-mono text-xs">{METER_SLUG}</span>{' '}
+                        meter, so the generation UI stays hidden.
                       </p>
                       <p className="mt-2">Subscribe to Pro to unlock it.</p>
                     </div>
@@ -417,19 +413,17 @@ export default function Home({
                   description={
                     <>
                       {usd.format(UNIT_AMOUNT_CENTS / 100)} per image
-                      generation, billed monthly on usage. Grants{' '}
-                      <code className="font-mono text-xs">
-                        {GENERATE_ENTITLEMENT}
-                      </code>
-                      ,{' '}
+                      generation, billed monthly on usage. Grants the{' '}
+                      <code className="font-mono text-xs">{METER_SLUG}</code>{' '}
+                      meter plus the{' '}
                       <code className="font-mono text-xs">
                         {EXPORT_HD_ENTITLEMENT}
                       </code>{' '}
                       and{' '}
                       <code className="font-mono text-xs">
                         {PRIORITY_ENTITLEMENT}
-                      </code>
-                      .
+                      </code>{' '}
+                      entitlements.
                     </>
                   }
                   onChange={refresh}

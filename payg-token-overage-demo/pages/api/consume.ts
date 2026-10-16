@@ -1,13 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
-import {
-  GENERATE_ENTITLEMENT,
-  GRANTEE,
-  METER_SLUG,
-  OWNER,
-  TOKEN_SLUG,
-} from '@/lib/constants'
+import { GRANTEE, METER_SLUG, OWNER, TOKEN_SLUG } from '@/lib/constants'
 import { getEntitlements } from '@/lib/entitlements'
 import { getSalable, isSalableError } from '@/lib/salable'
 import { consumeSchema } from '@/lib/schemas'
@@ -30,7 +24,8 @@ export default async function handler(
  * Generate images, paying with the included tokens first and falling back to
  * metered overage once they run out:
  *
- * 1. Check the grantee holds the entitlement.
+ * 1. Check the owner-scoped entitlement check returns both the token and the
+ *    meter. They share a slug, so the type is what tells the entries apart.
  * 2. Try to consume `amount` tokens. Salable deducts them and answers 204, or
  *    rejects the whole request with 422 "Insufficient token balance" and
  *    deducts nothing.
@@ -53,11 +48,23 @@ async function POST(
   const { amount } = parsed.data
 
   try {
-    // 1. Only let the grantee generate images with the entitlement.
+    // 1. Only let the grantee generate images when the Pro plan's token and
+    // meter are both present. Consuming needs the token, overage needs the
+    // meter, and the error names whichever is missing.
     const entitlements = await getEntitlements(GRANTEE)
-    if (!entitlements.some((e) => e.value === GENERATE_ENTITLEMENT)) {
+    const hasTokens = entitlements.some(
+      (e) => e.type === 'token' && e.value === TOKEN_SLUG
+    )
+    const hasMeter = entitlements.some(
+      (e) => e.type === 'meter' && e.value === METER_SLUG
+    )
+    if (!hasTokens || !hasMeter) {
+      const missing = [
+        ...(hasTokens ? [] : [`the ${TOKEN_SLUG} token`]),
+        ...(hasMeter ? [] : [`the ${METER_SLUG} meter`]),
+      ].join(' or ')
       return res.status(403).json({
-        error: `${GRANTEE} does not have the ${GENERATE_ENTITLEMENT} entitlement. Subscribe to Pro to unlock it`,
+        error: `${GRANTEE} does not have access to ${missing}. Subscribe to Pro to unlock it`,
       })
     }
 

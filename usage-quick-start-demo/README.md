@@ -4,14 +4,14 @@ A simple demo following the [Salable Usage-Based Billing Quick Start](https://sa
 
 ## What's included?
 
-- **Selling a metered plan.** A monthly _Pro_ subscription with a [metered line item](https://salable.app/docs/metered-usage) on the `image_generations` meter at $0.10 per image. It unlocks the `image_generations`, `high_resolution_exports` and `priority_processing` entitlements. When the customer completes checkout, Salable creates a usage record for the billing period.
-- **Feature gating.** Generating images is locked until the grantee has the `image_generations` entitlement. The example "Export HD" feature is locked until the grantee has the `high_resolution_exports` entitlement; it shows a gated feature that records no usage.
+- **Selling a metered plan.** A monthly _Pro_ subscription with a [metered line item](https://salable.app/docs/metered-usage) on the `image_generations` meter at $0.10 per image. It unlocks the `high_resolution_exports` and `priority_processing` entitlements. When the customer completes checkout, Salable creates a usage record for the billing period.
+- **Feature gating.** Generating images is locked until an [owner-scoped entitlement check](https://salable.app/docs/check-entitlements) returns the `image_generations` meter (an entry with `type: 'meter'` and `value: 'image_generations'`). No separate entitlement is created for it. The example "Export HD" feature is locked until the grantee has the `high_resolution_exports` entitlement; it shows a gated feature that records no usage.
 - **Recording usage.** Each generation records an increment against the meter, with an `Idempotency-Key` on every request so a retried call can never count the same generation twice. Salable answers immediately and increments the record in the background.
 - **Handling missing usage records.** Recording usage without a Pro subscription returns a 404 from Salable, which the demo turns into a readable message.
 - **Viewing current usage.** The count on the current period's usage record, the estimated charge and the history of records with their status.
 - **Managing the subscription.** Turn auto-renew off and on, or cancel immediately. See the features be automatically locked upon cancellation and the usage record finalised.
 
-> NOTE: To keep the code identical to the guide, the [owner](https://salable.app/docs/core-concepts#owner) is hardcoded as `company_acme`, the [grantee](https://salable.app/docs/core-concepts#grantee) as `user_alice`, the [meter](https://salable.app/docs/core-concepts#meter-slug) as `image_generations` and the [entitlements](https://salable.app/docs/understanding-entitlements) as `image_generations`, `high_resolution_exports` and `priority_processing`.
+> NOTE: To keep the code identical to the guide, the [owner](https://salable.app/docs/core-concepts#owner) is hardcoded as `company_acme`, the [grantee](https://salable.app/docs/core-concepts#grantee) as `user_alice`, the [meter](https://salable.app/docs/core-concepts#meter-slug) as `image_generations` and the [entitlements](https://salable.app/docs/understanding-entitlements) as `high_resolution_exports` and `priority_processing`.
 
 ## Prerequisites
 
@@ -70,7 +70,7 @@ A simple demo following the [Salable Usage-Based Billing Quick Start](https://sa
 1. **Start from nothing.** When first opened, the features are locked, there is no subscription and there are no usage records.
 
 2. **Subscribe to Pro.** Press _Subscribe to Pro_. On Stripe's Checkout, pay with Stripe's test card `4242 4242 4242 4242`, any future expiry, and any CVC. Stripe charges nothing up front; the metered usage is billed at the end of each period.
-   - Once returned to the demo, Generate images and Export HD are unlocked and a `current` usage record with a count of 0 appears in the Usage panel.
+   - Once returned to the demo, Generate images and Export HD are unlocked and a `current` usage record with a count of 0 appears in the Usage panel. The entitlement check now returns `image_generations` with `type: 'meter'` alongside the two entitlements.
 
 3. **Generate images.** Enter `5` and press _Generate_. Salable records the usage in the background, so the count rises to 5 within about half a minute and the estimated charge shows $0.50. The page polls for the change; press _Refresh_ if you get impatient.
 
@@ -78,7 +78,7 @@ A simple demo following the [Salable Usage-Based Billing Quick Start](https://sa
 
 5. **Manage the subscription.** In the Pro panel press _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore.
 
-6. **Cancel Pro.** Press _Cancel subscription_ in the Pro panel and confirm. Once Stripe confirms, the entitlements are removed, Generate images and Export HD are locked again and the usage record changes from `current` to `final` with a Finalised date.
+6. **Cancel Pro.** Press _Cancel subscription_ in the Pro panel and confirm. Once Stripe confirms, the meter and the entitlements drop out of the entitlement check, Generate images and Export HD are locked again and the usage record changes from `current` to `final` with a Finalised date.
 
 7. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plan.
 
@@ -86,7 +86,7 @@ A simple demo following the [Salable Usage-Based Billing Quick Start](https://sa
 
 - **"Salable could not be reached" on load.** `SALABLE_SECRET_KEY` or `SALABLE_PRO_PLAN_ID` is missing from `.env.local`, or the key is not a test mode key (Salable answers _Unauthenticated_). Check the values and restart `npm run dev`.
 - **Nothing changes after checkout.** Press _Refresh_ after a moment to refetch the data from Salable.
-- **Generate returns 403 even though you just bought Pro.** The webhook may still be in flight. Wait a few seconds, or press _Refresh_.
+- **Generate returns 403 even though you just bought Pro.** The webhook may still be in flight. Wait a few seconds, or press _Refresh_. If it persists, the entitlement check is not returning an `image_generations` entry with `type: 'meter'`; confirm the plan has a metered line item on `image_generations` and the check is passing the `owner`.
 - **Generate returns "Salable has no usage record".** Salable creates the usage record when the Pro subscription starts, a moment after checkout. Wait a few seconds and try again. If it persists, the owner does not hold a Pro subscription.
 - **The count has not changed after generating.** Usage is queued and processed in the background, which can take around half a minute. Press _Refresh_ after a short wait.
 - **Entitlements or subscriptions you did not buy appear.** The [token quick start demo](../token-quick-start-demo) uses the same `company_acme` owner and `user_alice` grantee. If you have run it in the same Salable organisation, its subscriptions are listed under the same owner and _Reset demo_ in either demo deletes both demos' subscriptions.

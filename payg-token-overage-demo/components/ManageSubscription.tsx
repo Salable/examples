@@ -33,7 +33,7 @@ export function ManageSubscription({
     schema: subscriptionIdSchema,
     action: '/api/subscription/cancel',
     confirm:
-      'Cancel the Pro subscription now? The entitlement is removed once Stripe confirms the cancellation, the current usage record is finalised immediately and the overage so far is invoiced. Remaining tokens stay until they expire or you reset the demo.',
+      'Cancel the Pro subscription now? The token and meter drop out of the entitlement check once Stripe confirms the cancellation, the current usage record is finalised immediately and the overage so far is invoiced. Remaining tokens stay until they expire or you reset the demo.',
     onSuccess: onCancelled,
   })
 

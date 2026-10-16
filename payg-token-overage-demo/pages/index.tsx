@@ -14,7 +14,6 @@ import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
 import { useApiForm } from '@/hooks/useApiForm'
 import {
-  GENERATE_ENTITLEMENT,
   GRANTEE,
   INCLUDED_TOKENS,
   METER_SLUG,
@@ -179,12 +178,22 @@ export default function Home({
     onSuccess: refresh,
   })
 
-  // The grantee has access if the entitlement is present. The Pro plan is the
-  // only thing that grants it.
-  const canGenerate =
+  // The owner-scoped check returns the Pro plan's token and meter as two
+  // entries sharing the image_generations slug, told apart by type. Generating
+  // needs both: tokens to consume and the meter to record overage against.
+  const hasTokens =
     entitlements.data?.entitlements.some(
-      (e) => e.value === GENERATE_ENTITLEMENT
+      (e) => e.type === 'token' && e.value === TOKEN_SLUG
     ) ?? false
+  const hasMeter =
+    entitlements.data?.entitlements.some(
+      (e) => e.type === 'meter' && e.value === METER_SLUG
+    ) ?? false
+  const canGenerate = hasTokens && hasMeter
+  // Which of the two entries the locked state should point at.
+  const missingAccess = [!hasTokens && 'token', !hasMeter && 'meter']
+    .filter(Boolean)
+    .join(' and ')
 
   const loaded = Boolean(
     entitlements.data && subscription.data && tokens.data && usage.data
@@ -339,22 +348,21 @@ export default function Home({
         {entitlements.data && subscription.data && tokens.data && usage.data ? (
           <>
             <div className="grid gap-6 md:grid-cols-2">
-              {/* The entitlement check gates the generate form. */}
+              {/* The owner-scoped entitlement check gates the generate form. */}
               <Panel
                 title="Generate images"
                 description={
                   <>
                     Gated by the{' '}
-                    <code className="font-mono text-xs">
-                      {GENERATE_ENTITLEMENT}
-                    </code>{' '}
-                    entitlement for{' '}
-                    <code className="font-mono text-xs">{GRANTEE}</code>. Each
-                    generation consumes{' '}
                     <code className="font-mono text-xs">{TOKEN_SLUG}</code>{' '}
-                    tokens; once the balance is empty it is recorded against the{' '}
+                    token and the{' '}
                     <code className="font-mono text-xs">{METER_SLUG}</code>{' '}
-                    meter as overage.
+                    meter for{' '}
+                    <code className="font-mono text-xs">{GRANTEE}</code>. An
+                    owner-scoped entitlement check returns them as two entries
+                    sharing one slug, told apart by type. Each generation
+                    consumes tokens; once the balance is empty it is recorded
+                    against the meter as overage.
                   </>
                 }
                 badge={
@@ -376,11 +384,9 @@ export default function Home({
                   <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
                     <p>
                       <span className="font-mono text-xs">{GRANTEE}</span> does
-                      not have the{' '}
-                      <span className="font-mono text-xs">
-                        {GENERATE_ENTITLEMENT}
-                      </span>{' '}
-                      entitlement, so the generation UI stays hidden.
+                      not have access to the{' '}
+                      <span className="font-mono text-xs">{TOKEN_SLUG}</span>{' '}
+                      {missingAccess}, so the generation UI stays hidden.
                     </p>
                     <p className="mt-2">Subscribe to Pro to unlock it.</p>
                   </div>
@@ -397,11 +403,9 @@ export default function Home({
                     <code className="font-mono text-xs">{TOKEN_SLUG}</code>{' '}
                     tokens, reset each cycle. Beyond that,{' '}
                     {usd.format(OVERAGE_UNIT_AMOUNT_CENTS / 100)} per image is
-                    billed as metered usage at the end of the period. Grants{' '}
-                    <code className="font-mono text-xs">
-                      {GENERATE_ENTITLEMENT}
-                    </code>
-                    .
+                    billed as metered usage at the end of the period. Puts the{' '}
+                    <code className="font-mono text-xs">{TOKEN_SLUG}</code>{' '}
+                    token and meter in the entitlement check.
                   </>
                 }
                 onChange={refresh}

@@ -2,7 +2,12 @@ import { METER_SLUG, OWNER } from './constants'
 import { getSalable } from './salable'
 import type { UsageRecord, UsageRecordStatus, UsageSummary } from './types'
 
-const STATUSES = new Set<UsageRecordStatus>(['recorded', 'current', 'final'])
+const STATUSES = new Set<UsageRecordStatus>([
+  'recorded',
+  'current',
+  'final',
+  'overage',
+])
 
 /**
  * Step 5 of the guide: the owner's usage records for one meter. The guide only
@@ -17,7 +22,7 @@ export async function getUsage(): Promise<UsageSummary> {
     queryParameters: {
       owner: OWNER,
       meterSlug: METER_SLUG,
-      status: ['current', 'final'],
+      status: ['current', 'final', 'overage'],
       sort: 'desc',
       limit: '25',
     },

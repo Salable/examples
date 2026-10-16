@@ -2,10 +2,13 @@
 // https://salable.app/docs/usage-quick-start?lang=sdk
 export const OWNER = 'company_acme'
 export const GRANTEE = 'user_alice'
-/** The meter the Pro plan's metered line item records usage against. */
+/**
+ * The meter the Pro plan's metered line item records usage against. An
+ * owner-scoped entitlement check returns it as
+ * `{ type: 'meter', value: 'image_generations' }`, which is what unlocks
+ * generating images; no separate entitlement is needed.
+ */
 export const METER_SLUG = 'image_generations'
-/** Granted by the Pro plan only: unlocks generating images (recording usage). */
-export const GENERATE_ENTITLEMENT = 'image_generations'
 /** Also granted by the Pro plan: unlocks the simulated Export HD feature. */
 export const EXPORT_HD_ENTITLEMENT = 'high_resolution_exports'
 /** Granted by the Pro plan. Display only; nothing in the demo is gated on it. */

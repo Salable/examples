@@ -15,7 +15,6 @@ import { Panel } from '@/components/Panel'
 import { useApiForm } from '@/hooks/useApiForm'
 import {
   EXPORT_HD_ENTITLEMENT,
-  GENERATE_ENTITLEMENT,
   GRANTEE,
   OWNER,
   TOKEN_SLUG,
@@ -141,11 +140,13 @@ export default function Home({
   }
 
   const starter = subscription.data?.starter ?? null
-  // Step 6 of the guide: the grantee has access if the entitlement is present.
-  // Both plans grant generate_images; only Starter grants export_hd.
+  // Step 6 of the guide: the owner-scoped check returns the image_tokens slug
+  // with type 'token' while either plan's subscription is active. Check both
+  // type and value, because a meter can share a token's slug. Only Starter
+  // grants the export_hd entitlement.
   const canGenerate =
     entitlements.data?.entitlements.some(
-      (e) => e.value === GENERATE_ENTITLEMENT
+      (e) => e.type === 'token' && e.value === TOKEN_SLUG
     ) ?? false
   const canExportHd =
     entitlements.data?.entitlements.some(
@@ -287,18 +288,18 @@ export default function Home({
           <>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-6">
-                {/* Steps 5 and 6: the entitlement check gates the consume form. */}
+                {/* Steps 5 and 6: the owner-scoped entitlement check gates the consume form. */}
                 <Panel
                   title="Consume tokens"
                   description={
                     <>
                       Gated by the{' '}
-                      <code className="font-mono text-xs">
-                        {GENERATE_ENTITLEMENT}
-                      </code>{' '}
-                      entitlement for{' '}
-                      <code className="font-mono text-xs">{GRANTEE}</code>. Both
-                      plans grant it.
+                      <code className="font-mono text-xs">{TOKEN_SLUG}</code>{' '}
+                      token for{' '}
+                      <code className="font-mono text-xs">{GRANTEE}</code>,
+                      returned by an owner-scoped entitlement check. Both plans
+                      have a line item on it, so no separate entitlement is
+                      needed.
                     </>
                   }
                   badge={
@@ -318,11 +319,9 @@ export default function Home({
                     <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
                       <p>
                         <span className="font-mono text-xs">{GRANTEE}</span>{' '}
-                        does not have the{' '}
-                        <span className="font-mono text-xs">
-                          {GENERATE_ENTITLEMENT}
-                        </span>{' '}
-                        entitlement, so the generation UI stays hidden.
+                        does not have access to the{' '}
+                        <span className="font-mono text-xs">{TOKEN_SLUG}</span>{' '}
+                        token, so the generation UI stays hidden.
                       </p>
                       <p className="mt-2">
                         Subscribe to Starter or buy a Token Top-Up to unlock it.
@@ -425,7 +424,7 @@ export default function Home({
                 ) : (
                   <Panel
                     title="Subscribe to Starter"
-                    description="$29 / month. Grants 1,000 image_tokens each cycle plus the generate_images and export_hd entitlements. The only plan that unlocks Export HD."
+                    description="$29 / month. Grants 1,000 image_tokens each cycle plus the export_hd entitlement. The only plan that unlocks Export HD."
                     badge={<Badge tone="zinc">Not subscribed</Badge>}
                   >
                     <div className="space-y-3">
@@ -444,7 +443,7 @@ export default function Home({
                 {/* Step 4 again, one-off variant. Each purchase creates a perpetual subscription, so it works without Starter. */}
                 <Panel
                   title="Token Top-Up"
-                  description="$29 one-off. Adds 1,000 image_tokens and creates a perpetual subscription that grants generate_images, so it works without Starter."
+                  description="$29 one-off. Adds 1,000 image_tokens and creates a perpetual subscription, so image_tokens stays in the entitlement check and consuming works without Starter."
                   badge={<Badge tone="zinc">One-off</Badge>}
                 >
                   <div className="space-y-3">

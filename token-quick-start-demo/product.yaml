@@ -12,7 +12,6 @@ product:
     cardPrefillPreference: none
     pastDueEntitlements: true
 entitlements:
-  - name: generate_images
   - name: export_hd
 plans:
   - name: Starter
@@ -20,7 +19,6 @@ plans:
     isPerpetual: false
     trialPeriodDays: null
     entitlements:
-      - generate_images
       - export_hd
     lineItems:
       - name: Starter
@@ -56,8 +54,7 @@ plans:
     isActive: true
     isPerpetual: true
     trialPeriodDays: null
-    entitlements:
-      - generate_images
+    entitlements: []
     lineItems:
       - name: Token Top-Up
         slug: token_topup

@@ -1,6 +1,6 @@
 import { getFormProps } from '@conform-to/react'
 import { useApiForm } from '@/hooks/useApiForm'
-import { EXPORT_HD_ENTITLEMENT, GENERATE_ENTITLEMENT } from '@/lib/constants'
+import { EXPORT_HD_ENTITLEMENT, TOKEN_SLUG } from '@/lib/constants'
 import { autoRenewSchema, subscriptionIdSchema } from '@/lib/schemas'
 import type { Subscription } from '@/lib/types'
 import { Button } from './Button'
@@ -33,7 +33,7 @@ export function ManageSubscription({
   const cancel = useApiForm({
     schema: subscriptionIdSchema,
     action: '/api/subscription/cancel',
-    confirm: `Cancel the Starter subscription now? The ${EXPORT_HD_ENTITLEMENT} entitlement is removed once Stripe confirms the cancellation. ${GENERATE_ENTITLEMENT} stays if a Token Top-Up has been bought; remaining tokens stay until they expire or you reset the demo.`,
+    confirm: `Cancel the Starter subscription now? The ${EXPORT_HD_ENTITLEMENT} entitlement is removed once Stripe confirms the cancellation. Access to ${TOKEN_SLUG} stays if a Token Top-Up has been bought; remaining tokens stay until they expire or you reset the demo.`,
     onSuccess: onCancelled,
   })
 

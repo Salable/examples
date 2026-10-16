@@ -6,8 +6,8 @@ Self-contained demo apps showing how to build on [Salable](https://salable.app).
 
 | Demo | What it shows |
 | --- | --- |
-| [`token-quick-start-demo`](./token-quick-start-demo) | Sell a recurring token plan and a one-off top-up, consume tokens from the balance and gate features on entitlements. Follows the [token quick start](https://salable.app/docs/token-quick-start). |
-| [`usage-quick-start-demo`](./usage-quick-start-demo) | Sell a metered plan, record usage against a meter and gate features on entitlements. Follows the [usage-based billing quick start](https://salable.app/docs/usage-quick-start). |
+| [`token-quick-start-demo`](./token-quick-start-demo) | Sell a recurring token plan and a one-off top-up, consume tokens from the balance and gate the feature on the token returned by an owner-scoped entitlement check. Follows the [token quick start](https://salable.app/docs/token-quick-start). |
+| [`usage-quick-start-demo`](./usage-quick-start-demo) | Sell a metered plan, record usage against a meter and gate the feature on the meter returned by an owner-scoped entitlement check. Follows the [usage-based billing quick start](https://salable.app/docs/usage-quick-start). |
 | [`payg-token-overage-demo`](./payg-token-overage-demo) | A monthly token allowance with pay-as-you-go overage. Consumes tokens first, then records anything beyond the allowance as metered usage, combining the two models in one subscription. |
 
 Each demo's README walks through the setup and a step-by-step tour of the app.

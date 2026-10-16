@@ -1,12 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
-import {
-  GENERATE_ENTITLEMENT,
-  GRANTEE,
-  OWNER,
-  TOKEN_SLUG,
-} from '@/lib/constants'
+import { GRANTEE, OWNER, TOKEN_SLUG } from '@/lib/constants'
 import { getEntitlements } from '@/lib/entitlements'
 import { getSalable, isSalableError } from '@/lib/salable'
 import { consumeSchema } from '@/lib/schemas'
@@ -40,10 +35,15 @@ async function POST(
   const { amount } = parsed.data
 
   try {
+    // Step 6: the owner-scoped check returns the token slug with
+    // type 'token'. Check both, because a meter can share the same slug.
     const entitlements = await getEntitlements(GRANTEE)
-    if (!entitlements.some((e) => e.value === GENERATE_ENTITLEMENT)) {
+    const hasAccess = entitlements.some(
+      (e) => e.type === 'token' && e.value === TOKEN_SLUG
+    )
+    if (!hasAccess) {
       return res.status(403).json({
-        error: `${GRANTEE} does not have the ${GENERATE_ENTITLEMENT} entitlement. Subscribe to Starter or buy a Token Top-Up to unlock it`,
+        error: `${GRANTEE} does not have access to the ${TOKEN_SLUG} token. Subscribe to Starter or buy a Token Top-Up to unlock it`,
       })
     }
 
