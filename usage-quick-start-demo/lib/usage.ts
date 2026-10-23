@@ -22,7 +22,7 @@ export async function getUsage(): Promise<UsageSummary> {
     queryParameters: {
       owner: OWNER,
       meterSlug: METER_SLUG,
-      status: ['current', 'final', 'overage'],
+      status: ['current', 'final', 'overage', 'recorded'],
       sort: 'desc',
       limit: '25',
     },
