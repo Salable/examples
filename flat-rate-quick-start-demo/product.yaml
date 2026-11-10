@@ -1,0 +1,51 @@
+product:
+  name: Music Streaming
+  archivedAt: null
+  isActive: true
+  settings:
+    cancelUrl: null
+    successUrl: null
+    allowPromoCodes: false
+    automaticTax: false
+    collectBillingAddress: false
+    collectShippingAddress: false
+    cardPrefillPreference: none
+    pastDueEntitlements: true
+entitlements:
+  - name: ad_free_listening
+plans:
+  - name: Pro
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    entitlements:
+      - ad_free_listening
+    lineItems:
+      # Mirrors a Line Item with a Pricing Type of "Flat Rate" in the dashboard:
+      # a fixed $20 charged every month, regardless of how much the customer
+      # listens.
+      - name: Pro
+        slug: music_streaming_pro
+        nickname: ''
+        priceType: flat_rate
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 2000
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
