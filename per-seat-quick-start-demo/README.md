@@ -5,14 +5,14 @@ A simple demo following the [Salable Per-Seat Billing Quick Start](https://salab
 ## What's included?
 
 - **Selling a flat-rate plan and a per-seat plan.** A monthly _Personal_ subscription at $9.00 and a monthly _Team_ subscription at $12.00 per seat with a [per-seat line item](https://salable.app/docs/products-and-pricing#line-item-types) capped at 2 seats. Personal unlocks the `export_pdf` [entitlement](https://salable.app/docs/core-concepts#entitlement); Team unlocks `export_pdf` and `ai_assistant`.
-- **Two users, two tabs.** View the app as Alice or Bob and switch between their _Personal_ tab, where the user is their own [owner](https://salable.app/docs/core-concepts#owner), and the _Team ACME_ tab, owned by `team_acme`. The pair selects which owner and [grantee](https://salable.app/docs/core-concepts#grantee) every Salable call is made for.
+- **Two users, two workspaces.** Use _Viewing as_ in the top-right corner to view the app as Alice or Bob, and the team dropdown in the top-left corner to switch between their _Personal_ workspace, where the user is their own [owner](https://salable.app/docs/core-concepts#owner), and the _Team ACME_ workspace, owned by `team_acme`. The pair selects which owner and [grantee](https://salable.app/docs/core-concepts#grantee) every Salable call is made for.
 - **Groups created at checkout.** Team checkout passes the buyer's grantee ID with 2 seats in `metadata`, so Salable creates a [group](https://salable.app/docs/grantee-groups) owned by `team_acme` with the buyer as its first member and two seats to fill.
-- **Feature gating.** Two simulated features, _Export PDF_ and _AI assistant_, are locked until an [owner-scoped entitlement check](https://salable.app/docs/check-entitlements) for the current user and tab returns their entitlement. The same user is locked out of the AI assistant on their Personal tab and let in on Team ACME.
+- **Feature gating.** Two simulated features, _Export PDF_ and _AI assistant_, are locked until an [owner-scoped entitlement check](https://salable.app/docs/check-entitlements) for the current user and workspace returns their entitlement. The same user is locked out of the AI assistant in their Personal workspace and let in on Team ACME.
 - **Adding and removing members.** Once the Team subscription is live, a member can add the other user to the group, granting them the Team plan's entitlements straight away with no checkout, or remove a member to free the seat. Salable rejects an add that would exceed the seat count.
 - **Membership as authorisation.** Being in the group is what lets a user see and manage the team's subscription as well as access the features the subscription grants. Users outside the group will appear as unsubscribed.
-- **Managing the subscriptions.** Turn auto-renew off and on, or cancel immediately, on either tab. Cancelling Team locks the features for every member of the group at once.
+- **Managing the subscriptions.** Turn auto-renew off and on, or cancel immediately, in either workspace. Cancelling Team locks the features for every member of the group at once.
 
-> NOTE: To keep the code close to the guide, the grantees are hardcoded as `user_alice` and `user_bob`, the team's owner as `team_acme`, the per-seat line item as `team_seats` and the entitlements as `export_pdf` and `ai_assistant`. On the Personal tab the owner is the user's own ID.
+> NOTE: To keep the code close to the guide, the grantees are hardcoded as `user_alice` and `user_bob`, the team's owner as `team_acme`, the per-seat line item as `team_seats` and the entitlements as `export_pdf` and `ai_assistant`. In the Personal workspace the owner is the user's own ID.
 
 ## Prerequisites
 
@@ -69,23 +69,23 @@ A simple demo following the [Salable Per-Seat Billing Quick Start](https://salab
 
 ## Using the Demo
 
-1. **Start from nothing.** When first opened, the page is viewing as Alice on her Personal tab. Both features are locked and there is no subscription. The _Owner_ and _Grantee_ chips show which IDs the entitlement check is made with; switch user or tab and watch them change.
+1. **Start from nothing.** When first opened, the page is viewing as Alice in her Personal workspace. Both features are locked and there is no subscription. The _Owner_ and _Grantee_ chips show which IDs the entitlement check is made with; switch user or workspace and watch them change.
 
 2. **Subscribe to Personal.** Press _Subscribe to Personal_ with Alice selected. On Stripe's Checkout, enter any email address and pay with Stripe's test card `4242 4242 4242 4242` using any future expiry, CVC and cardholder name.
    - Once returned to the demo, Export PDF is unlocked but the AI assistant stays locked: the Personal plan only grants `export_pdf`. The subscription is owned by `user_alice`.
 
-3. **Subscribe to Team.** Switch to the _Team ACME_ tab while still viewing as Alice. Both features are locked again, because the check is now scoped to owner `team_acme`, which is not currently subscribed. Press _Subscribe to Team_; Stripe shows 2 seats at $12.00 each. Pay with the same test card details as before.
+3. **Subscribe to Team.** Pick _Team ACME_ from the team dropdown while still viewing as Alice. Both features are locked again, because the check is now scoped to owner `team_acme`, which is not currently subscribed. Press _Subscribe to Team_; Stripe shows 2 seats at $12.00 each. Pay with the same test card details as before.
    - Once returned, both features are unlocked. The _Team ACME members_ panel shows the group Salable created at checkout, with Alice as its only member and _1 of 2 seats used_.
 
 4. **Add Bob.** In the members panel press _Add Bob Johnson_. Bob joins the group and the badge changes to _2 of 2 seats used_. No checkout is required as the seat was already paid for, it was just allocated to Bob.
 
-5. **View as Bob.** Switch _Viewing as_ to Bob. On the Team ACME tab both features are unlocked for him through his membership of the group, and he sees the same Manage Team and members panels as Alice. Switch to his Personal tab and both features are locked because Bob has no Personal subscription of his own.
+5. **View as Bob.** Switch _Viewing as_ to Bob. In the Team ACME workspace both features are unlocked for him through his membership of the group, and he sees the same Manage Team and members panels as Alice. Switch to his Personal workspace and both features are locked because Bob has no Personal subscription of his own.
 
-6. **Remove Bob.** Switch back to Alice's Team ACME tab and press _Remove_ on Bob's row. The seat is freed and, viewing as Bob again, the Team ACME tab is locked: the features are gated, the subscription and members panels are replaced by a _Not a member_ notice.
+6. **Remove Bob.** Switch back to Alice in the Team ACME workspace and press _Remove_ on Bob's row. The seat is freed and, viewing as Bob again, the Team ACME workspace is locked: the features are gated, the subscription and members panels are replaced by a _Not a member_ notice.
 
 7. **Manage a subscription.** When viewing as Alice, use the Manage panel to _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore.
 
-8. **Cancel Team.** Press _Cancel subscription_ in the Manage Team panel and confirm. Once Stripe confirms, the entitlements drop out of the check for every member, both features lock on the Team ACME tab for Alice and Bob alike, and the members panel reports no group. Alice's Personal subscription is unaffected.
+8. **Cancel Team.** Press _Cancel subscription_ in the Manage Team panel and confirm. Once Stripe confirms, the entitlements drop out of the check for every member, both features lock in the Team ACME workspace for Alice and Bob alike, and the members panel reports no group. Alice's Personal subscription is unaffected.
 
 9. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plans.
 
@@ -97,7 +97,7 @@ A simple demo following the [Salable Per-Seat Billing Quick Start](https://salab
 - **The members panel says there is no group even though Team is subscribed.** Salable creates the group when the subscription is created, a moment after checkout. Press _Refresh_ after a few seconds.
 - **The dashboard lists more than one group for `team_acme`.** Every Team checkout creates a new group, so cancelling and subscribing again leaves the old group behind. The demo always follows the live subscription's group, and _Reset demo_ deletes them all.
 - **Entitlements or subscriptions you did not buy appear.** The [usage](../usage-quick-start-demo) and [token](../token-quick-start-demo) quick start demos use the same `user_alice` grantee. Running them in the same Salable organisation does not mix subscriptions, because the owners differ, but _Reset demo_ in any of them deletes the `user_alice` grantee record and with it her memberships in this demo's groups.
-- **The Team ACME tab only says "Not a member".** The user you are viewing as is not in the group behind the live Team subscription, so the server withholds its details. Switch to a member and add them. In your own app the acting user would come from the session; the demo passes it in the request because you pick who to view as.
+- **The Team ACME workspace only says "Not a member".** The user you are viewing as is not in the group behind the live Team subscription, so the server withholds its details. Switch to a member and add them. In your own app the acting user would come from the session; the demo passes it in the request because you pick who to view as.
 
 ## Further Reading
 

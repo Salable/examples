@@ -8,10 +8,11 @@ import useSWR from 'swr'
 import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
 import { CheckoutForm } from '@/components/CheckoutForm'
-import { ContextSwitcher } from '@/components/ContextSwitcher'
+import { ViewerSwitcher, TeamSwitcher } from '@/components/ContextSwitcher'
 import { FormMessages } from '@/components/FormMessages'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
+import { ResourceTooltip } from '@/components/ResourceTooltip'
 import { SimulatedFeature } from '@/components/SimulatedFeature'
 import { TeamMembers } from '@/components/TeamMembers'
 import { useApiForm } from '@/hooks/useApiForm'
@@ -26,7 +27,7 @@ import {
   TEAM_SEATS,
   USERS,
   type GranteeId,
-  type Tab,
+  type Team,
 } from '@/lib/constants'
 import {
   contextFromQuery,
@@ -36,6 +37,7 @@ import {
 } from '@/lib/context'
 import { getEntitlements } from '@/lib/entitlements'
 import { getTeamView } from '@/lib/group'
+import type { ResourceKey } from '@/lib/resources'
 import { isSalableError } from '@/lib/salable'
 import { resetSchema } from '@/lib/schemas'
 import { getSubscriptionSummary } from '@/lib/subscriptions'
@@ -51,7 +53,7 @@ import type {
 type Props = Context & {
   entitlements: Entitlement[] | null
   subscription: SubscriptionSummary | null
-  /** Only read on the Team tab; null on the Personal tab. */
+  /** Only read in the Team ACME workspace; null in Personal. */
   group: GroupSummary | null
   error: string | null
   /** True when Stripe has just sent the browser back to `/?checkout=success`. */
@@ -72,16 +74,17 @@ const usd = new Intl.NumberFormat('en-US', {
 const OWNERS = [USERS.user_alice.id, USERS.user_bob.id, TEAM_OWNER]
 
 export const getServerSideProps = (async ({ query }) => {
-  const { granteeId, tab } = contextFromQuery(query)
-  const ctx = resolveContext(granteeId, tab)
+  const { granteeId, team } = contextFromQuery(query)
+  const ctx = resolveContext(granteeId, team)
   const polling = query.checkout === 'success'
   try {
-    // On the Team tab the subscription is part of the member-only view.
+    // In the Team ACME workspace the subscription is part of the member-only
+    // view.
     const [entitlements, view] = await Promise.all([
       getEntitlements(ctx.granteeId, ctx.owner),
-      tab === 'team'
+      team === 'acme'
         ? getTeamView(ctx.granteeId)
-        : getSubscriptionSummary(ctx.owner, ctx.tab).then((subscription) => ({
+        : getSubscriptionSummary(ctx.owner, ctx.team).then((subscription) => ({
             subscription,
             group: null,
           })),
@@ -89,7 +92,7 @@ export const getServerSideProps = (async ({ query }) => {
     return {
       props: {
         granteeId,
-        tab,
+        team,
         entitlements,
         subscription: view.subscription,
         group: view.group,
@@ -101,7 +104,7 @@ export const getServerSideProps = (async ({ query }) => {
     return {
       props: {
         granteeId,
-        tab,
+        team,
         entitlements: null,
         subscription: null,
         group: null,
@@ -118,7 +121,7 @@ export const getServerSideProps = (async ({ query }) => {
 
 export default function Home({
   granteeId: initialGranteeId,
-  tab: initialTab,
+  team: initialTeam,
   entitlements: initialEntitlements,
   subscription: initialSubscription,
   group: initialGroup,
@@ -127,20 +130,20 @@ export default function Home({
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const router = useRouter()
 
-  // The user and tab live in the URL so they survive a reload and the round
+  // The user and team live in the URL so they survive a reload and the round
   // trip to Stripe. Switching is a shallow replace: no server render, the SWR
   // keys below change and the page refetches for the new context.
   const ctx = contextFromQuery(router.query)
-  const { owner } = resolveContext(ctx.granteeId, ctx.tab)
+  const { owner } = resolveContext(ctx.granteeId, ctx.team)
   const qs = contextSearchParams(ctx)
   // The server-rendered values only apply while the context they were read
   // for is the one on screen.
   const sameAsServer =
-    ctx.granteeId === initialGranteeId && ctx.tab === initialTab
+    ctx.granteeId === initialGranteeId && ctx.team === initialTeam
 
   function switchContext(next: Context) {
     void router.replace(
-      { pathname: '/', query: { grantee: next.granteeId, tab: next.tab } },
+      { pathname: '/', query: { grantee: next.granteeId, team: next.team } },
       undefined,
       { shallow: true }
     )
@@ -173,9 +176,10 @@ export default function Home({
       ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
     }
   )
-  // The group is only read on the Team tab, and only shown to its members.
+  // The group is only read in the Team ACME workspace, and only shown to its
+  // members.
   const group = useSWR<GroupSummary>(
-    ctx.tab === 'team' ? `/api/group?${qs}` : null,
+    ctx.team === 'acme' ? `/api/group?${qs}` : null,
     fetcher,
     {
       fallbackData: sameAsServer && initialGroup ? initialGroup : undefined,
@@ -198,7 +202,7 @@ export default function Home({
   })
 
   // Step 3 of the guide: the owner-scoped check returns the entitlements the
-  // tab's live subscription grants this user. Export PDF is on both plans; the
+  // team's live subscription grants this user. Export PDF is on both plans; the
   // AI assistant is only on Team.
   const canExportPdf =
     entitlements.data?.entitlements.some(
@@ -212,7 +216,7 @@ export default function Home({
   const loaded = Boolean(
     entitlements.data &&
     subscription.data &&
-    (ctx.tab === 'personal' || group.data)
+    (ctx.team === 'personal' || group.data)
   )
   const isValidating =
     entitlements.isValidating || subscription.isValidating || group.isValidating
@@ -226,13 +230,13 @@ export default function Home({
   const checkoutCancelled = router.query.checkout === 'cancelled'
 
   const liveSubscription = subscription.data?.subscription ?? null
-  // On the Team tab, a live subscription the user is not allowed to see is
-  // reported as members-only rather than returned.
+  // In the Team ACME workspace, a live subscription the user is not allowed to
+  // see is reported as members-only rather than returned.
   const memberOnly = subscription.data?.memberOnly ?? false
   const team = group.data?.team ?? null
 
   const locked = {
-    tab: ctx.tab,
+    team: ctx.team,
     granteeId: ctx.granteeId,
     subscribed: Boolean(liveSubscription) || memberOnly,
     isMember: !memberOnly,
@@ -248,56 +252,17 @@ export default function Home({
         />
       </Head>
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
-        {/* Identity strip: who the page is viewing as, and the owner and grantee that resolves to. */}
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <Image
-                  src="/salable.svg"
-                  alt="Salable"
-                  width={36}
-                  height={36}
-                />
-                <h1 className="text-2xl font-semibold tracking-tight">
-                  Salable Per-Seat Quick Start
-                </h1>
-              </div>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Per-seat billing demo. Every panel maps to a step in the{' '}
-                <a
-                  className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
-                  href="https://salable.app/docs/per-seat-quick-start?lang=sdk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  quick start guide
-                </a>
-                .
-              </p>
-            </div>
-            <ContextSwitcher
+        {/* Top bar: the team dropdown in the left corner, who the page is viewing as in the right. Together they decide the owner and grantee every Salable call is made for. */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <TeamSwitcher
+            team={ctx.team}
+            onChange={(team) => switchContext({ ...ctx, team })}
+          />
+          <div className="flex flex-wrap items-center gap-3">
+            <ViewerSwitcher
               granteeId={ctx.granteeId}
-              tab={ctx.tab}
-              onChange={switchContext}
+              onChange={(granteeId) => switchContext({ ...ctx, granteeId })}
             />
-            <dl className="flex flex-wrap gap-2 text-sm">
-              {[
-                ['Owner', owner],
-                ['Grantee', ctx.granteeId],
-                ['Plan', ctx.tab === 'team' ? 'Team' : 'Personal'],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-1.5 rounded-md border border-black/10 bg-zinc-50 px-2.5 py-1 dark:border-white/15 dark:bg-zinc-900"
-                >
-                  <dt className="text-zinc-500">{label}</dt>
-                  <dd className="font-mono text-xs font-medium">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-          <div className="flex items-center gap-3 sm:flex-col sm:items-end">
             <Button
               variant="secondary"
               onClick={refresh}
@@ -307,6 +272,53 @@ export default function Home({
               Refresh
             </Button>
           </div>
+        </div>
+
+        {/* Identity strip: the owner and grantee the context resolves to, the plan it buys and the entitlements the demo gates on. Each term reveals its definition. */}
+        <header className="space-y-3">
+          <div>
+            <div className="flex items-center gap-3">
+              <Image src="/salable.svg" alt="Salable" width={36} height={36} />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Salable Per-Seat Quick Start
+              </h1>
+            </div>
+            <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+              Per-seat billing demo. Every panel maps to a step in the{' '}
+              <a
+                className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
+                href="https://salable.app/docs/per-seat-quick-start?lang=sdk"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                quick start guide
+              </a>
+              .
+            </p>
+          </div>
+          <dl className="flex flex-wrap gap-2 text-sm">
+            {(
+              [
+                ['owner', owner],
+                ['grantee', ctx.granteeId],
+                ['plan', ctx.team === 'acme' ? 'Team' : 'Personal'],
+                [
+                  'entitlement',
+                  [EXPORT_PDF_ENTITLEMENT, AI_ASSISTANT_ENTITLEMENT].join(', '),
+                ],
+              ] satisfies [ResourceKey, string][]
+            ).map(([resource, value]) => (
+              <div
+                key={resource}
+                className="flex items-center gap-1.5 rounded-md border border-black/10 bg-zinc-50 px-2.5 py-1 dark:border-white/15 dark:bg-zinc-900"
+              >
+                <dt>
+                  <ResourceTooltip resource={resource} />
+                </dt>
+                <dd className="font-mono text-xs font-medium">{value}</dd>
+              </div>
+            ))}
+          </dl>
         </header>
 
         {checkoutCancelled ? (
@@ -364,7 +376,8 @@ export default function Home({
             className="rounded-xl border border-dashed border-black/15 p-5 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400"
           >
             Loading {USERS[ctx.granteeId].name}&apos;s{' '}
-            {ctx.tab === 'team' ? TEAM_NAME : 'Personal'} tab from Salable…
+            {ctx.team === 'acme' ? TEAM_NAME : 'Personal'} workspace from
+            Salable…
           </p>
         ) : null}
 
@@ -372,7 +385,7 @@ export default function Home({
           <>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-6">
-                {/* Step 3: two features gated on entitlements. The check is owner-scoped, so each tab answers for its own owner. */}
+                {/* Step 3: two features gated on entitlements. The check is owner-scoped, so each team answers for its own owner. */}
                 <SimulatedFeature
                   key={`export-${qs}`}
                   title="Export PDF"
@@ -382,16 +395,17 @@ export default function Home({
                       <code className="font-mono text-xs">
                         {EXPORT_PDF_ENTITLEMENT}
                       </code>{' '}
-                      entitlement, which both plans grant. The check is for{' '}
+                      entitlement, which both plans grant. The check is for the
+                      grantee{' '}
                       <code className="font-mono text-xs">{ctx.granteeId}</code>{' '}
-                      scoped to owner{' '}
+                      scoped to the owner{' '}
                       <code className="font-mono text-xs">{owner}</code>.
                     </>
                   }
                   entitlement={EXPORT_PDF_ENTITLEMENT}
                   enabled={canExportPdf}
                   requires={
-                    ctx.tab === 'team' ? 'Requires Team' : 'Requires Personal'
+                    ctx.team === 'acme' ? 'Requires Team' : 'Requires Personal'
                   }
                   lockedHint={lockedHint({ ...locked, teamOnly: false })}
                   buttonLabel="Export notes as PDF"
@@ -409,8 +423,8 @@ export default function Home({
                         {AI_ASSISTANT_ENTITLEMENT}
                       </code>{' '}
                       entitlement, which only the Team plan grants. The same
-                      user is locked out here on their Personal tab and let in
-                      on {TEAM_NAME}, from one entitlement check with a
+                      user is locked out here in their Personal workspace and
+                      let in on {TEAM_NAME}, from one entitlement check with a
                       different owner.
                     </>
                   }
@@ -450,9 +464,10 @@ export default function Home({
                     </p>
                   </Panel>
                 ) : (
-                  // Step 2: checkout for the tab's plan, or manage it once it exists.
+                  // Step 2: checkout for the team's plan, or manage it once it
+                  // exists.
                   <PlanPanel
-                    tab={ctx.tab}
+                    team={ctx.team}
                     granteeId={ctx.granteeId}
                     owner={owner}
                     subscription={liveSubscription}
@@ -464,12 +479,12 @@ export default function Home({
             </div>
 
             {/* Step 4: the group behind the Team subscription, and who is in it. Members only. */}
-            {ctx.tab === 'team' && !memberOnly ? (
+            {ctx.team === 'acme' && !memberOnly ? (
               <Panel
                 title={`${TEAM_NAME} members`}
                 description={
                   <>
-                    The group Salable created for{' '}
+                    The group Salable created for the owner{' '}
                     <code className="font-mono text-xs">{TEAM_OWNER}</code> at
                     checkout, with the buyer as its first member. Everyone in it
                     receives the Team plan&apos;s entitlements, and the seat
@@ -554,22 +569,22 @@ export default function Home({
   )
 }
 
-/** Why a feature is locked on this tab for this user, and what unlocks it. */
+/** Why a feature is locked in this team for this user, and what unlocks it. */
 function lockedHint({
-  tab,
+  team,
   granteeId,
   subscribed,
   isMember,
   teamOnly,
 }: {
-  tab: Tab
+  team: Team
   granteeId: GranteeId
   subscribed: boolean
   isMember: boolean
   /** The entitlement is only on the Team plan. */
   teamOnly: boolean
 }): ReactNode {
-  if (tab === 'personal') {
+  if (team === 'personal') {
     return teamOnly ? (
       <>
         Only the Team plan grants it. Switch to {TEAM_NAME}, where it is
@@ -595,25 +610,25 @@ function lockedHint({
 }
 
 /**
- * Step 2: a Subscribe panel until the tab's owner holds a live subscription
- * to the tab's plan, then a Manage panel for that subscription.
+ * Step 2: a Subscribe panel until the team's owner holds a live subscription
+ * to the team's plan, then a Manage panel for that subscription.
  */
 function PlanPanel({
-  tab,
+  team,
   granteeId,
   owner,
   subscription,
   onChange,
   onCancelled,
 }: {
-  tab: Tab
+  team: Team
   granteeId: GranteeId
   owner: string
   subscription: Subscription | null
   onChange: () => void
   onCancelled: () => void
 }) {
-  const name = tab === 'team' ? 'Team' : 'Personal'
+  const name = team === 'acme' ? 'Team' : 'Personal'
 
   if (subscription) {
     return (
@@ -657,7 +672,7 @@ function PlanPanel({
     <Panel
       title={`Subscribe to ${name}`}
       description={
-        tab === 'team' ? (
+        team === 'acme' ? (
           <>
             {usd.format(TEAM_SEAT_PRICE_CENTS / 100)} per seat per month, billed
             to <code className="font-mono text-xs">{TEAM_OWNER}</code>. Checkout
@@ -674,10 +689,10 @@ function PlanPanel({
           </>
         ) : (
           <>
-            {usd.format(PERSONAL_PRICE_CENTS / 100)} per month, billed to{' '}
-            <code className="font-mono text-xs">{owner}</code>. Grants the{' '}
+            {usd.format(PERSONAL_PRICE_CENTS / 100)} per month, billed to the
+            owner <code className="font-mono text-xs">{owner}</code>. Grants the{' '}
             <code className="font-mono text-xs">{EXPORT_PDF_ENTITLEMENT}</code>{' '}
-            entitlement to{' '}
+            entitlement to the grantee{' '}
             <code className="font-mono text-xs">{granteeId}</code> only.
           </>
         )
@@ -688,7 +703,7 @@ function PlanPanel({
         <CheckoutForm
           label={`Subscribe to ${name}`}
           granteeId={granteeId}
-          tab={tab}
+          team={team}
         />
         <p className="text-xs text-zinc-500">
           Use Stripe test card 4242 4242 4242 4242 with any future expiry.

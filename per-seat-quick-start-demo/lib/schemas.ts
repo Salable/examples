@@ -1,16 +1,16 @@
 import { z } from 'zod'
-import { GRANTEE_IDS, TABS } from './constants'
+import { GRANTEE_IDS, TEAMS } from './constants'
 
 /**
- * Which user and tab a request is for. The owner is derived server-side from
+ * Which user and team a request is for. The owner is derived server-side from
  * these (see `resolveContext`), so a request can never name an owner directly.
  */
 export const contextSchema = z.object({
   granteeId: z.enum(GRANTEE_IDS),
-  tab: z.enum(TABS),
+  team: z.enum(TEAMS),
 })
 
-/** Checkout buys the tab's plan for the user, so it needs nothing more. */
+/** Checkout buys the team's plan for the user, so it needs nothing more. */
 export const checkoutSchema = contextSchema
 
 /**

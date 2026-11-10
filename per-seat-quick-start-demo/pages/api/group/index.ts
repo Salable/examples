@@ -36,8 +36,8 @@ async function GET(
     })
   }
 
-  // The Personal tab has no group to show.
-  if (parsed.data.tab !== 'team') {
+  // The Personal workspace has no group to show.
+  if (parsed.data.team !== 'acme') {
     return res.status(200).json({ team: null, memberOnly: false })
   }
 

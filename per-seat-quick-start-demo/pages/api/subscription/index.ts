@@ -21,9 +21,9 @@ export default async function handler(
 }
 
 /**
- * The tab owner's live subscription to the tab's plan, used to switch
- * Subscribe and Manage. On the Team tab it is only returned to a member of
- * the team's group.
+ * The team owner's live subscription to the team's plan, used to switch
+ * Subscribe and Manage. In the Team ACME workspace it is only returned to a
+ * member of the team's group.
  */
 async function GET(
   req: NextApiRequest,
@@ -37,16 +37,16 @@ async function GET(
     })
   }
 
-  const ctx = resolveContext(parsed.data.granteeId, parsed.data.tab)
+  const ctx = resolveContext(parsed.data.granteeId, parsed.data.team)
 
   try {
-    if (ctx.tab === 'team') {
+    if (ctx.team === 'acme') {
       const view = await getTeamView(ctx.granteeId)
       return res.status(200).json(view.subscription)
     }
     return res
       .status(200)
-      .json(await getSubscriptionSummary(ctx.owner, ctx.tab))
+      .json(await getSubscriptionSummary(ctx.owner, ctx.team))
   } catch (err) {
     if (isSalableError(err)) {
       return res

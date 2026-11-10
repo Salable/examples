@@ -4,11 +4,11 @@ import { getSubscriptionSummary } from './subscriptions'
 import type { Subscription, TeamSummary, TeamView } from './types'
 
 /**
- * Step 4 of the guide: the Team tab as one user sees it. Being in the group
- * is what authorises a user to see and manage the team's subscription, so a
- * user outside the group gets neither the subscription nor the member list,
- * only `memberOnly: true`. Without a live Team subscription there is no group
- * to be in, and anyone may start one.
+ * Step 4 of the guide: the Team ACME workspace as one user sees it. Being in
+ * the group is what authorises a user to see and manage the team's
+ * subscription, so a user outside the group gets neither the subscription nor
+ * the member list, only `memberOnly: true`. Without a live Team subscription
+ * there is no group to be in, and anyone may start one.
  */
 export async function getTeamView(granteeId: string): Promise<TeamView> {
   const { subscription, team } = await loadTeam()
@@ -43,7 +43,7 @@ async function loadTeam(): Promise<{
   subscription: Subscription | null
   team: TeamSummary | null
 }> {
-  const { subscription } = await getSubscriptionSummary(TEAM_OWNER, 'team')
+  const { subscription } = await getSubscriptionSummary(TEAM_OWNER, 'acme')
   if (!subscription?.groupId) return { subscription, team: null }
 
   try {

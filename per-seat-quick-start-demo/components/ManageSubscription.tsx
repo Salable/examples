@@ -16,7 +16,7 @@ type Props = {
 
 /**
  * Cancel and auto-renew controls. Its own component because it owns two form
- * hooks and is only rendered while the tab's subscription exists.
+ * hooks and is only rendered while the team's subscription exists.
  */
 export function ManageSubscription({
   subscription,

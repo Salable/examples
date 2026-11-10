@@ -9,7 +9,7 @@ type Props = {
   description: ReactNode
   /** The entitlement slug the feature is gated on, for the locked message. */
   entitlement: string
-  /** Whether the current user holds the entitlement on the current tab. */
+  /** Whether the current user holds the entitlement on the current team. */
   enabled: boolean
   /** Shown in the locked badge, e.g. "Requires Team". */
   requires: string

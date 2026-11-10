@@ -1,58 +1,87 @@
-import { GRANTEE_IDS, TABS, TEAM_NAME, USERS, type Tab } from '@/lib/constants'
-import type { Context } from '@/lib/context'
+import {
+  GRANTEE_IDS,
+  TEAMS,
+  TEAM_NAME,
+  USERS,
+  type GranteeId,
+  type Team,
+} from '@/lib/constants'
 
-type Props = Context & {
-  onChange: (next: Context) => void
-}
-
-const TAB_LABELS: Record<Tab, string> = {
+const TEAM_LABELS: Record<Team, string> = {
   personal: 'Personal',
-  team: TEAM_NAME,
+  acme: TEAM_NAME,
 }
 
 /**
- * Picks who the page is viewing as and which tab is open. Together they decide
- * the grantee and owner every Salable call is made for.
+ * Dropdown for which team is open: the user's own Personal workspace or the
+ * shared Team ACME one, as a vendor's team switcher would offer. Together
+ * with `ViewerSwitcher` it decides the grantee and owner every Salable call is
+ * made for.
  */
-export function ContextSwitcher({ granteeId, tab, onChange }: Props) {
+export function TeamSwitcher({
+  team,
+  onChange,
+}: {
+  team: Team
+  onChange: (team: Team) => void
+}) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-zinc-500">Viewing as</span>
-        <div
-          role="group"
-          aria-label="Viewing as"
-          className="inline-flex rounded-md border border-black/15 p-0.5 dark:border-white/20"
-        >
-          {GRANTEE_IDS.map((id) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={id === granteeId}
-              onClick={() => onChange({ granteeId: id, tab })}
-              className={segment(id === granteeId)}
-            >
-              {USERS[id].name}
-            </button>
-          ))}
-        </div>
-      </div>
+    <span className="relative inline-flex">
+      <select
+        aria-label="Team"
+        value={team}
+        onChange={(event) => onChange(event.target.value as Team)}
+        className="cursor-pointer appearance-none rounded-md border border-black/15 bg-transparent py-2 pr-9 pl-3 text-sm font-medium transition-colors hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground dark:border-white/20 dark:hover:bg-white/10"
+      >
+        {TEAMS.map((t) => (
+          <option key={t} value={t}>
+            {TEAM_LABELS[t]}
+          </option>
+        ))}
+      </select>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 16 16"
+        className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-zinc-500"
+      >
+        <path
+          d="M4 6l4 4 4-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  )
+}
 
+/** Segmented control for which user the page is viewing as. */
+export function ViewerSwitcher({
+  granteeId,
+  onChange,
+}: {
+  granteeId: GranteeId
+  onChange: (granteeId: GranteeId) => void
+}) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="text-zinc-500">Viewing as</span>
       <div
-        role="tablist"
-        aria-label="Workspace"
+        role="group"
+        aria-label="Viewing as"
         className="inline-flex rounded-md border border-black/15 p-0.5 dark:border-white/20"
       >
-        {TABS.map((t) => (
+        {GRANTEE_IDS.map((id) => (
           <button
-            key={t}
+            key={id}
             type="button"
-            role="tab"
-            aria-selected={t === tab}
-            onClick={() => onChange({ granteeId, tab: t })}
-            className={segment(t === tab)}
+            aria-pressed={id === granteeId}
+            onClick={() => onChange(id)}
+            className={segment(id === granteeId)}
           >
-            {TAB_LABELS[t]}
+            {USERS[id].name}
           </button>
         ))}
       </div>

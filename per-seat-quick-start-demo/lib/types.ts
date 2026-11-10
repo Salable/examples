@@ -37,11 +37,11 @@ export type Subscription = Required<
 }
 
 export type SubscriptionSummary = {
-  /** The owner's live subscription to the tab's plan, or null when not subscribed. */
+  /** The owner's live subscription to the team's plan; null when not subscribed. */
   subscription: Subscription | null
   /**
-   * True on the Team tab when the team has a live subscription but the user
-   * is not in its group, so the subscription is withheld from them.
+   * True in the Team ACME workspace when the team has a live subscription but
+   * the user is not in its group, so the subscription is withheld from them.
    */
   memberOnly: boolean
 }
@@ -73,7 +73,7 @@ export type GroupSummary = {
   memberOnly: boolean
 }
 
-/** The Team tab as one user is allowed to see it. */
+/** The Team ACME workspace as one user is allowed to see it. */
 export type TeamView = {
   subscription: SubscriptionSummary
   group: GroupSummary

@@ -1,4 +1,4 @@
-import { getPlanIds, type Tab } from './constants'
+import { getPlanIds, type Team } from './constants'
 import { getSalable } from './salable'
 import type { Subscription, SubscriptionSummary } from './types'
 
@@ -10,15 +10,15 @@ export const LIVE_STATUSES = new Set([
 ])
 
 /**
- * The owner's live subscription to the tab's plan, if any. `plans` filters
+ * The owner's live subscription to the team's plan, if any. `plans` filters
  * server-side to subscriptions that include that plan, and expanding
  * `subscriptionPlans` exposes the group the plan grants access to.
  */
 export async function getSubscriptionSummary(
   owner: string,
-  tab: Tab
+  team: Team
 ): Promise<SubscriptionSummary> {
-  const planId = getPlanIds()[tab]
+  const planId = getPlanIds()[team]
 
   const response = await getSalable().api.subscriptions.get({
     queryParameters: { owner, plans: [planId], expand: ['subscriptionPlans'] },

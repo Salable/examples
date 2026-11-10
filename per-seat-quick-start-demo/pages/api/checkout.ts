@@ -31,26 +31,26 @@ async function POST(
     })
   }
 
-  const ctx = resolveContext(parsed.data.granteeId, parsed.data.tab)
+  const ctx = resolveContext(parsed.data.granteeId, parsed.data.team)
   const appUrl = 'http://localhost:3000'
-  // Send Stripe back to the same user and tab so the page polls the right
+  // Send Stripe back to the same user and team so the page polls the right
   // context for the new subscription.
   const returnTo = contextSearchParams(ctx)
 
   try {
-    // Step 2 of the guide: generate a Stripe Checkout link for the tab's plan.
+    // Step 2 of the guide: generate a Stripe Checkout link for the team's plan.
     // `grantee` is the user's ID rather than a group ID, so Salable creates a
-    // new group for the owner containing them. On the Team tab the group is
-    // owned by team_acme, and `metadata` buys 2 seats up front so a teammate
-    // can be added to the group later without changing the quantity.
+    // new group for the owner containing them. In the Team ACME workspace the
+    // group is owned by team_acme, and `metadata` buys 2 seats up front so a
+    // teammate can be added to the group later without changing the quantity.
     const response = await getSalable().api.checkout.post({
-      planId: getPlanIds()[ctx.tab],
+      planId: getPlanIds()[ctx.team],
       owner: ctx.owner,
       grantee: ctx.granteeId,
       interval: 'month',
       intervalCount: 1,
       currency: 'USD',
-      ...(ctx.tab === 'team' && {
+      ...(ctx.team === 'acme' && {
         metadata: {
           additionalData: { [TEAM_SEATS_SLUG]: { quantity: TEAM_SEATS } },
         },

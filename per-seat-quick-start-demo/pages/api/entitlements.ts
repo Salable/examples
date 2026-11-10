@@ -20,8 +20,8 @@ export default async function handler(
 }
 
 /**
- * Step 3 of the guide: which entitlements the user holds on this tab. The
- * check is scoped to the tab's owner, so a user in both their own group and
+ * Step 3 of the guide: which entitlements the user holds in this team. The
+ * check is scoped to the team's owner, so a user in both their own group and
  * the team's only sees the access that owner's subscriptions grant.
  */
 async function GET(
@@ -36,7 +36,7 @@ async function GET(
     })
   }
 
-  const ctx = resolveContext(parsed.data.granteeId, parsed.data.tab)
+  const ctx = resolveContext(parsed.data.granteeId, parsed.data.team)
 
   try {
     return res.status(200).json({

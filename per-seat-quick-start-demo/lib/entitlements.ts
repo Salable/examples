@@ -6,8 +6,8 @@ import type { Entitlement, EntitlementType } from './types'
  * always owner-scoped: a grantee can belong to groups under several owners
  * (here, their own Personal owner and `team_acme`), and without `owner`
  * Salable would return the union of every subscription they can reach. Passing
- * the tab's owner is what makes the same user see different access on each
- * tab. It also makes Salable include the owner's meter and token slugs as
+ * the team's owner is what makes the same user see different access in each
+ * team. It also makes Salable include the owner's meter and token slugs as
  * `type: 'meter'` / `type: 'token'` entries, though this demo only has plain
  * entitlements.
  */
