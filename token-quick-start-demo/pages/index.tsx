@@ -12,6 +12,7 @@ import { ConsumeForm } from '@/components/ConsumeForm'
 import { FormMessages } from '@/components/FormMessages'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
+import { ResourceTooltip } from '@/components/ResourceTooltip'
 import { useApiForm } from '@/hooks/useApiForm'
 import {
   EXPORT_HD_ENTITLEMENT,
@@ -20,6 +21,7 @@ import {
   TOKEN_SLUG,
 } from '@/lib/constants'
 import { getEntitlements } from '@/lib/entitlements'
+import type { ResourceKey } from '@/lib/resources'
 import { isSalableError } from '@/lib/salable'
 import { resetSchema } from '@/lib/schemas'
 import { getSubscriptionSummary } from '@/lib/subscriptions'
@@ -177,7 +179,7 @@ export default function Home({
         />
       </Head>
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
-        {/* Identity strip: confirms the hardcoded owner / grantee from the guide. */}
+        {/* Identity strip: confirms the hardcoded owner / grantee from the guide. Each term reveals its definition. */}
         <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-3">
             <div>
@@ -206,16 +208,20 @@ export default function Home({
               </p>
             </div>
             <dl className="flex flex-wrap gap-2 text-sm">
-              {[
-                ['Owner', OWNER],
-                ['Grantee', GRANTEE],
-                ['Token', TOKEN_SLUG],
-              ].map(([label, value]) => (
+              {(
+                [
+                  ['owner', OWNER],
+                  ['grantee', GRANTEE],
+                  ['token', TOKEN_SLUG],
+                ] satisfies [ResourceKey, string][]
+              ).map(([resource, value]) => (
                 <div
-                  key={label}
+                  key={resource}
                   className="flex items-center gap-1.5 rounded-md border border-black/10 bg-zinc-50 px-2.5 py-1 dark:border-white/15 dark:bg-zinc-900"
                 >
-                  <dt className="text-zinc-500">{label}</dt>
+                  <dt>
+                    <ResourceTooltip resource={resource} />
+                  </dt>
                   <dd className="font-mono text-xs font-medium">{value}</dd>
                 </div>
               ))}
