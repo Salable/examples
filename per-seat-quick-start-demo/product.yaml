@@ -1,0 +1,90 @@
+product:
+  name: Notes
+  archivedAt: null
+  isActive: true
+  settings:
+    cancelUrl: null
+    successUrl: null
+    allowPromoCodes: false
+    automaticTax: false
+    collectBillingAddress: false
+    collectShippingAddress: false
+    cardPrefillPreference: none
+    pastDueEntitlements: true
+entitlements:
+  - name: export_pdf
+  - name: ai_assistant
+plans:
+  # A flat-rate plan for one person. The buyer is both the owner and the
+  # grantee, so the group Salable creates at checkout only ever holds them.
+  - name: Personal
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    # ai_assistant is deliberately left off so only Team unlocks the AI
+    # assistant. Add it here if Personal subscribers should receive it too.
+    entitlements:
+      - export_pdf
+    lineItems:
+      - name: Personal
+        slug: personal
+        nickname: ''
+        priceType: flat_rate
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 900
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
+  # A per-seat plan for a team. The price is multiplied by the number of
+  # seats, and the seat count caps how many grantees the subscription's group
+  # can hold. maxQuantity is 2 to keep the demo small: the buyer plus one
+  # teammate added without a second checkout.
+  - name: Team
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    entitlements:
+      - export_pdf
+      - ai_assistant
+    lineItems:
+      - name: Team seats
+        slug: team_seats
+        nickname: ''
+        priceType: per_seat
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 2
+        allowChangingQuantity: true
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 1200
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
