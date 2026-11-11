@@ -1,0 +1,193 @@
+product:
+  name: Notes Hybrid
+  archivedAt: null
+  isActive: true
+  settings:
+    cancelUrl: null
+    successUrl: null
+    allowPromoCodes: false
+    automaticTax: false
+    collectBillingAddress: false
+    collectShippingAddress: false
+    cardPrefillPreference: none
+    pastDueEntitlements: true
+# Neither feature is gated on a plain entitlement: Export PDF is unlocked by
+# the pdf_exports meter and the AI assistant by the ai_credits token, both of
+# which an owner-scoped entitlement check returns from the plan's line items.
+entitlements: []
+plans:
+  # A plan for one person that combines two pricing types: a flat monthly fee
+  # and a metered charge for every PDF export. The buyer is both the owner and
+  # the grantee, so the group Salable creates at checkout only ever holds them.
+  - name: Personal
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    entitlements: []
+    lineItems:
+      - name: Personal
+        slug: hybrid_personal
+        nickname: ''
+        priceType: flat_rate
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        tokenSlug: null
+        tokenQuantity: null
+        tokenResetBehaviour: null
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 900
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+      # PDF exports on Personal: $0.25 per export, recorded against the
+      # pdf_exports meter and billed at the end of each period. The Team plan
+      # meters the same slug at a lower rate.
+      - name: PDF exports
+        slug: hybrid_personal_pdf_exports
+        nickname: ''
+        priceType: metered
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: pdf_exports
+        unitLabel: per export
+        tokenSlug: null
+        tokenQuantity: null
+        tokenResetBehaviour: null
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 25
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
+  # A plan for a team that combines three pricing types: per-seat pricing, a
+  # metered charge on the same pdf_exports meter as Personal at a lower rate,
+  # and a recurring allowance of ai_credits tokens that Personal does not get.
+  # Every member of the team's group shares the one subscription, so their
+  # exports pool on one usage record and their AI usage draws from one balance.
+  - name: Team
+    isActive: true
+    isPerpetual: false
+    trialPeriodDays: null
+    entitlements: []
+    lineItems:
+      # Seats: the price is multiplied by the number of seats, and the seat
+      # count caps how many grantees the subscription's group can hold.
+      # maxQuantity is 2 to keep the demo small: the buyer plus one teammate
+      # added without a second checkout.
+      - name: Team seats
+        slug: hybrid_team_seats
+        nickname: ''
+        priceType: per_seat
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 2
+        allowChangingQuantity: true
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        tokenSlug: null
+        tokenQuantity: null
+        tokenResetBehaviour: null
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 1200
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+      # PDF exports on Team: the same pdf_exports meter as Personal, at $0.10
+      # per export instead of $0.25. Which rate applies depends on which
+      # subscription the usage is recorded against, i.e. the owner.
+      - name: PDF exports
+        slug: hybrid_team_pdf_exports
+        nickname: ''
+        priceType: metered
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: pdf_exports
+        unitLabel: per export
+        tokenSlug: null
+        tokenQuantity: null
+        tokenResetBehaviour: null
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 10
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+      # AI credits: 100 ai_credits tokens every billing cycle for $5, reset at
+      # the start of each cycle. Only Team has this line item, so only Team
+      # members pass the token check that unlocks the AI assistant.
+      - name: AI credits
+        slug: hybrid_team_ai_credits
+        nickname: ''
+        priceType: token
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: true
+        maxQuantity: null
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        tokenSlug: ai_credits
+        tokenQuantity: 100
+        tokenResetBehaviour: reset
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 500
+                tiers: []
+            archivedAt: null
+        archivedAt: null
+    archivedAt: null
