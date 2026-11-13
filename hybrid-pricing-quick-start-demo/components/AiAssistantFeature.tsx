@@ -1,12 +1,7 @@
 import { getFormProps, getInputProps } from '@conform-to/react'
 import type { ReactNode } from 'react'
 import { useApiForm } from '@/hooks/useApiForm'
-import {
-  TEAM_NAME,
-  TOKEN_SLUG,
-  type GranteeId,
-  type Team,
-} from '@/lib/constants'
+import { TOKEN_SLUG, type GranteeId, type Team } from '@/lib/constants'
 import { consumeTokensSchema } from '@/lib/schemas'
 import { Badge } from './Badge'
 import { Button } from './Button'
@@ -27,10 +22,11 @@ type Props = {
 }
 
 /**
- * The token-gated feature. Only the Team plan has an ai_credits line item, so
- * the same user is locked out in their Personal workspace and let in on Team
- * ACME. Each submit consumes credits from the owner's balance, which every
- * member of the group shares.
+ * The token-gated feature. Both plans allocate ai_credits, so access depends
+ * on whether the open workspace's owner holds a live subscription and, on
+ * Team ACME, whether the user is in its group. Each submit consumes credits
+ * from the owner's balance: the user's own in Personal, or the one every
+ * member of the group shares in Team ACME.
  */
 export function AiAssistantFeature({
   team,
@@ -41,23 +37,24 @@ export function AiAssistantFeature({
   lockedHint,
   onChange,
 }: Props) {
+  const planName = team === 'acme' ? 'Team' : 'Personal'
   return (
     <Panel
       title="AI assistant"
       description={
         <>
           Gated by the <code className="font-mono text-xs">{TOKEN_SLUG}</code>{' '}
-          token, which only the Team plan allocates. The check is for the
-          grantee <code className="font-mono text-xs">{granteeId}</code> scoped
-          to the owner <code className="font-mono text-xs">{owner}</code>, and
-          each summary consumes credits from that owner&apos;s balance.
+          token, which both plans allocate in different amounts. The check is
+          for the grantee <code className="font-mono text-xs">{granteeId}</code>{' '}
+          scoped to the owner <code className="font-mono text-xs">{owner}</code>
+          . Each summary consumes credits from that owner&apos;s balance.
         </>
       }
       badge={
         enabled ? (
           <Badge tone="green">Access granted</Badge>
         ) : (
-          <Badge tone="red">Requires Team</Badge>
+          <Badge tone="red">Requires {planName}</Badge>
         )
       }
     >
@@ -65,6 +62,7 @@ export function AiAssistantFeature({
         <ConsumeForm
           team={team}
           granteeId={granteeId}
+          owner={owner}
           balance={balance}
           onChange={onChange}
         />
@@ -87,9 +85,10 @@ export function AiAssistantFeature({
 function ConsumeForm({
   team,
   granteeId,
+  owner,
   balance,
   onChange,
-}: Pick<Props, 'team' | 'granteeId' | 'balance' | 'onChange'>) {
+}: Pick<Props, 'team' | 'granteeId' | 'owner' | 'balance' | 'onChange'>) {
   const { form, fields, pending, message } = useApiForm({
     schema: consumeTokensSchema,
     action: '/api/tokens/consume',
@@ -131,7 +130,7 @@ function ConsumeForm({
           Summarise my notes
         </Button>
         <p className="text-xs text-zinc-500">
-          {balance.toLocaleString()} {TOKEN_SLUG} remaining for {TEAM_NAME}
+          {balance.toLocaleString()} {TOKEN_SLUG} remaining for {owner}
         </p>
       </div>
       <FormMessages

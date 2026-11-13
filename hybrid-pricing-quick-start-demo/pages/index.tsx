@@ -20,12 +20,12 @@ import { TokenPanel } from '@/components/TokenPanel'
 import { UsagePanel } from '@/components/UsagePanel'
 import { useApiForm } from '@/hooks/useApiForm'
 import {
+  AI_CREDITS,
+  AI_CREDITS_PRICE_CENTS,
   EXPORT_UNIT_CENTS,
   GRANTEE_IDS,
   METER_SLUG,
   PERSONAL_PRICE_CENTS,
-  TEAM_AI_CREDITS,
-  TEAM_AI_CREDITS_PRICE_CENTS,
   TEAM_NAME,
   TEAM_OWNER,
   TEAM_SEAT_PRICE_CENTS,
@@ -67,7 +67,7 @@ type Props = Context & {
   group: GroupSummary | null
   /** The owner's pdf_exports usage; null for a non-member of Team ACME. */
   usage: UsageSummary | null
-  /** The owner's ai_credits balance; only read in the Team ACME workspace, for members. */
+  /** The owner's ai_credits balance; null for a non-member of Team ACME. */
   tokens: TokenBalance | null
   error: string | null
   /** True when Stripe has just sent the browser back to `/?checkout=success`. */
@@ -106,11 +106,11 @@ export const getServerSideProps = (async ({ query }) => {
           })),
     ])
     // Usage and the token balance are the owner's, so like the subscription
-    // they are withheld from a non-member of Team ACME. Only Team has tokens.
+    // they are withheld from a non-member of Team ACME.
     const memberOnly = view.subscription.memberOnly
     const [usage, tokens] = await Promise.all([
       memberOnly ? null : getUsage(ctx.owner),
-      team === 'acme' && !memberOnly ? getTokenBalance(ctx.owner) : null,
+      memberOnly ? null : getTokenBalance(ctx.owner),
     ])
     return {
       props: {
@@ -236,7 +236,7 @@ export default function Home({
     }
   )
   const tokens = useSWR<TokenBalance>(
-    isMember && ctx.team === 'acme' ? `/api/tokens/balance?${qs}` : null,
+    isMember ? `/api/tokens/balance?${qs}` : null,
     fetcher,
     {
       fallbackData: sameAsServer && initialTokens ? initialTokens : undefined,
@@ -262,8 +262,9 @@ export default function Home({
 
   // Step 5 of the guide: the owner-scoped check returns what the owner's live
   // subscription grants this user, including the plan's meter and token slugs
-  // with their type. No separate entitlement duplicates them. Export PDF is
-  // metered on both plans; the AI assistant's tokens are only on Team.
+  // with their type. No separate entitlement duplicates them. Both plans
+  // meter Export PDF and allocate the AI assistant's tokens, each at its own
+  // rate and allowance.
   const canExport =
     entitlements.data?.entitlements.some(
       (e) => e.type === 'meter' && e.value === METER_SLUG
@@ -278,7 +279,7 @@ export default function Home({
     subscription.data &&
     (ctx.team === 'personal' || group.data) &&
     (memberOnly || usage.data) &&
-    (memberOnly || ctx.team === 'personal' || tokens.data)
+    (memberOnly || tokens.data)
   )
   const isValidating =
     entitlements.isValidating ||
@@ -460,7 +461,7 @@ export default function Home({
                   owner={owner}
                   enabled={canExport}
                   current={usage.data?.current?.count ?? 0}
-                  lockedHint={lockedHint({ ...locked, teamOnly: false })}
+                  lockedHint={lockedHint(locked)}
                   onChange={refresh}
                   onRecorded={() => startPolling(USAGE_POLL_TIMEOUT_MS)}
                 />
@@ -472,7 +473,7 @@ export default function Home({
                   owner={owner}
                   enabled={canUseAi}
                   balance={tokens.data?.balance ?? 0}
-                  lockedHint={lockedHint({ ...locked, teamOnly: true })}
+                  lockedHint={lockedHint(locked)}
                   onChange={refresh}
                 />
               </div>
@@ -528,9 +529,10 @@ export default function Home({
               />
             ) : null}
 
-            {/* Team only: the token balance every member draws from. */}
-            {ctx.team === 'acme' && !memberOnly && tokens.data ? (
+            {/* The owner's token balance, granted by this plan's allowance. In Team ACME, every member draws from it. Members only. */}
+            {!memberOnly && tokens.data ? (
               <TokenPanel
+                team={ctx.team}
                 owner={owner}
                 tokens={tokens.data}
                 subscribed={Boolean(liveSubscription)}
@@ -636,29 +638,14 @@ function lockedHint({
   granteeId,
   subscribed,
   isMember,
-  teamOnly,
 }: {
   team: Team
   granteeId: GranteeId
   subscribed: boolean
   isMember: boolean
-  /** The line item that unlocks the feature is only on the Team plan. */
-  teamOnly: boolean
 }): ReactNode {
   if (team === 'personal') {
-    return teamOnly ? (
-      <>
-        Only the Team plan has an{' '}
-        <span className="font-mono text-xs">{TOKEN_SLUG}</span> line item.
-        Switch to {TEAM_NAME}, where the credits are shared by every member of
-        the group.
-      </>
-    ) : (
-      <>
-        Subscribe to Personal to unlock it at{' '}
-        {usd.format(EXPORT_UNIT_CENTS.personal / 100)} per export.
-      </>
-    )
+    return <>Subscribe to Personal to unlock it for this user only.</>
   }
   if (!subscribed) {
     return <>Subscribe to Team to unlock it for everyone in the group.</>
@@ -704,8 +691,8 @@ function PlanPanel({
           <>
             {name} plan for owner{' '}
             <code className="font-mono text-xs">{owner}</code>. Cancelling
-            closes the usage record for the period and removes the meter
-            {team === 'acme' ? ' and token' : ''} from every check.
+            closes the usage record for the period and removes the meter and
+            token from every check.
           </>
         }
         badge={
@@ -747,8 +734,8 @@ function PlanPanel({
             {usd.format(TEAM_SEAT_PRICE_CENTS / 100)} per seat per month
             (checkout buys {TEAM_SEATS} seats,{' '}
             {usd.format((TEAM_SEAT_PRICE_CENTS * TEAM_SEATS) / 100)}),{' '}
-            {usd.format(TEAM_AI_CREDITS_PRICE_CENTS / 100)} per month for{' '}
-            {TEAM_AI_CREDITS}{' '}
+            {usd.format(AI_CREDITS_PRICE_CENTS.acme / 100)} per month for{' '}
+            {AI_CREDITS.acme.toLocaleString()}{' '}
             <code className="font-mono text-xs">{TOKEN_SLUG}</code>, and{' '}
             {usd.format(EXPORT_UNIT_CENTS.acme / 100)} per{' '}
             <code className="font-mono text-xs">{METER_SLUG}</code> billed at
@@ -757,14 +744,16 @@ function PlanPanel({
           </>
         ) : (
           <>
-            Two line items billed to the owner{' '}
+            Three line items billed to the owner{' '}
             <code className="font-mono text-xs">{owner}</code>:{' '}
-            {usd.format(PERSONAL_PRICE_CENTS / 100)} per month flat, plus{' '}
+            {usd.format(PERSONAL_PRICE_CENTS / 100)} per month flat,{' '}
+            {usd.format(AI_CREDITS_PRICE_CENTS.personal / 100)} per month for{' '}
+            {AI_CREDITS.personal.toLocaleString()}{' '}
+            <code className="font-mono text-xs">{TOKEN_SLUG}</code>, and{' '}
             {usd.format(EXPORT_UNIT_CENTS.personal / 100)} per{' '}
             <code className="font-mono text-xs">{METER_SLUG}</code> billed at
-            period end. Unlocks Export PDF for the grantee{' '}
-            <code className="font-mono text-xs">{granteeId}</code> only; no AI
-            credits.
+            period end. Unlocks both features for the grantee{' '}
+            <code className="font-mono text-xs">{granteeId}</code> only.
           </>
         )
       }

@@ -1,9 +1,10 @@
-import { TEAM_AI_CREDITS, TOKEN_SLUG } from '@/lib/constants'
+import { AI_CREDITS, TOKEN_SLUG, type Team } from '@/lib/constants'
 import type { TokenBalance } from '@/lib/types'
 import { Badge } from './Badge'
 import { Panel } from './Panel'
 
 type Props = {
+  team: Team
   owner: string
   tokens: TokenBalance
   /** Whether the owner holds a live subscription, for the empty-state copy. */
@@ -11,10 +12,12 @@ type Props = {
 }
 
 /**
- * The team owner's ai_credits balance and every record behind it. Only shown
- * in the Team ACME workspace, since only the Team plan allocates tokens.
+ * The owner's ai_credits balance and every record behind it. Tokens are per
+ * owner, so the Personal and Team workspaces each show their own balance,
+ * granted by their own plan's token line item.
  */
-export function TokenPanel({ owner, tokens, subscribed }: Props) {
+export function TokenPanel({ team, owner, tokens, subscribed }: Props) {
+  const planName = team === 'acme' ? 'Team' : 'Personal'
   return (
     <Panel
       title="AI credit balance"
@@ -22,10 +25,10 @@ export function TokenPanel({ owner, tokens, subscribed }: Props) {
         <>
           Current balance for the token{' '}
           <code className="font-mono text-xs">{TOKEN_SLUG}</code> for the owner{' '}
-          <code className="font-mono text-xs">{owner}</code>. The Team plan
-          allocates {TEAM_AI_CREDITS} each billing cycle and resets the balance
-          when the next one starts. Consuming is synchronous, so the balance
-          drops as soon as a summary is paid for.
+          <code className="font-mono text-xs">{owner}</code>. The {planName}{' '}
+          plan allocates {AI_CREDITS[team].toLocaleString()} each billing cycle
+          and resets the balance when the next one starts. Consuming is
+          synchronous, so the balance drops as soon as a summary is paid for.
         </>
       }
       badge={
@@ -42,11 +45,24 @@ export function TokenPanel({ owner, tokens, subscribed }: Props) {
         <span className="text-sm text-zinc-500">{TOKEN_SLUG} remaining</span>
       </div>
 
+      <p className="mb-4 rounded-md border border-black/10 bg-zinc-50 px-3 py-2 text-xs text-zinc-600 dark:border-white/15 dark:bg-zinc-900 dark:text-zinc-400">
+        Same token, different allowance: Personal grants{' '}
+        <span className="font-medium text-foreground">
+          {AI_CREDITS.personal.toLocaleString()}
+        </span>{' '}
+        and Team grants{' '}
+        <span className="font-medium text-foreground">
+          {AI_CREDITS.acme.toLocaleString()}
+        </span>{' '}
+        {TOKEN_SLUG} per cycle. Which balance a summary draws from depends only
+        on the owner the tokens are consumed for.
+      </p>
+
       {tokens.records.length === 0 ? (
         <p className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
           {subscribed
             ? 'No token records with a remaining balance. Salable grants the next allowance when the billing cycle resets.'
-            : 'No token records yet. Subscribe to Team; Salable grants the first allowance when the subscription starts.'}
+            : `No token records yet. Subscribe to ${planName}; Salable grants the first allowance when the subscription starts.`}
         </p>
       ) : (
         <div className="overflow-x-auto">

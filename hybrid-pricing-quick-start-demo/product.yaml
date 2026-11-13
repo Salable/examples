@@ -16,9 +16,10 @@ product:
 # which an owner-scoped entitlement check returns from the plan's line items.
 entitlements: []
 plans:
-  # A plan for one person that combines two pricing types: a flat monthly fee
-  # and a metered charge for every PDF export. The buyer is both the owner and
-  # the grantee, so the group Salable creates at checkout only ever holds them.
+  # A plan for one person that combines three pricing types: a flat monthly
+  # fee, a metered charge for every PDF export and a recurring allowance of
+  # ai_credits tokens. The buyer is both the owner and the grantee, so the
+  # group Salable creates at checkout only ever holds them.
   - name: Personal
     isActive: true
     isPerpetual: false
@@ -84,12 +85,44 @@ plans:
                 tiers: []
             archivedAt: null
         archivedAt: null
+      # AI credits on Personal: 1,000 ai_credits tokens every billing cycle for
+      # $5, reset at the start of each cycle. The Team plan allocates the same
+      # token in a larger bundle. Which balance a summary draws from depends on
+      # which owner the tokens are consumed for.
+      - name: AI credits
+        slug: hybrid_personal_ai_credits
+        nickname: ''
+        priceType: token
+        intervalType: recurring
+        billingScheme: per_unit
+        isActive: true
+        isUnlimited: false
+        maxQuantity: 1
+        allowChangingQuantity: false
+        tiersMode: null
+        minQuantity: 1
+        meterSlug: null
+        unitLabel: null
+        tokenSlug: ai_credits
+        tokenQuantity: 1000
+        tokenResetBehaviour: reset
+        tokenExpiryDays: null
+        prices:
+          - defaultCurrency: USD
+            interval: month
+            intervalCount: 1
+            currencyOptions:
+              - currency: USD
+                unitAmount: 500
+                tiers: []
+            archivedAt: null
+        archivedAt: null
     archivedAt: null
   # A plan for a team that combines three pricing types: per-seat pricing, a
   # metered charge on the same pdf_exports meter as Personal at a lower rate,
-  # and a recurring allowance of ai_credits tokens that Personal does not get.
-  # Every member of the team's group shares the one subscription, so their
-  # exports pool on one usage record and their AI usage draws from one balance.
+  # and a larger recurring allowance of the same ai_credits token. Every member
+  # of the team's group shares the one subscription, so their exports pool on
+  # one usage record and their AI usage draws from one balance.
   - name: Team
     isActive: true
     isPerpetual: false
@@ -109,7 +142,7 @@ plans:
         isActive: true
         isUnlimited: false
         maxQuantity: 2
-        allowChangingQuantity: true
+        allowChangingQuantity: false
         tiersMode: null
         minQuantity: 1
         meterSlug: null
@@ -159,9 +192,9 @@ plans:
                 tiers: []
             archivedAt: null
         archivedAt: null
-      # AI credits: 100 ai_credits tokens every billing cycle for $5, reset at
-      # the start of each cycle. Only Team has this line item, so only Team
-      # members pass the token check that unlocks the AI assistant.
+      # AI credits on Team: the same ai_credits token as Personal, 10,000 every
+      # billing cycle for $40 instead of 1,000 for $5, reset at the start of
+      # each cycle. Every member of the group spends from the one balance.
       - name: AI credits
         slug: hybrid_team_ai_credits
         nickname: ''
@@ -169,15 +202,15 @@ plans:
         intervalType: recurring
         billingScheme: per_unit
         isActive: true
-        isUnlimited: true
-        maxQuantity: null
+        isUnlimited: false
+        maxQuantity: 1
         allowChangingQuantity: false
         tiersMode: null
         minQuantity: 1
         meterSlug: null
         unitLabel: null
         tokenSlug: ai_credits
-        tokenQuantity: 100
+        tokenQuantity: 10000
         tokenResetBehaviour: reset
         tokenExpiryDays: null
         prices:
@@ -186,7 +219,7 @@ plans:
             intervalCount: 1
             currencyOptions:
               - currency: USD
-                unitAmount: 500
+                unitAmount: 4000
                 tiers: []
             archivedAt: null
         archivedAt: null

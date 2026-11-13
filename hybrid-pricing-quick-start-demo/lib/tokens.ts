@@ -3,10 +3,11 @@ import { getSalable, isSalableError } from './salable'
 import type { TokenBalance } from './types'
 
 /**
- * The owner's ai_credits balance, with the records behind it. Only the Team
- * plan has a token line item, so in practice this is `team_acme`'s balance,
- * which every member of the group draws from. `undefined` fields become
- * `null` so the result can be passed through `getServerSideProps`.
+ * The owner's ai_credits balance, with the records behind it. Both plans
+ * allocate the token, so in a Personal workspace this is the user's own
+ * balance and in Team ACME it is `team_acme`'s, which every member of the
+ * group draws from. `undefined` fields become `null` so the result can be
+ * passed through `getServerSideProps`.
  */
 export async function getTokenBalance(owner: string): Promise<TokenBalance> {
   let response

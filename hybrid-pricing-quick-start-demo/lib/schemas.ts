@@ -21,7 +21,7 @@ export const recordUsageSchema = contextSchema.extend({
     .positive({ error: 'Must be at least 1' }),
 })
 
-/** AI assistant: how many credits to consume from the team's token balance. */
+/** AI assistant: how many credits to consume from the team owner's token balance. */
 export const consumeTokensSchema = contextSchema.extend({
   amount: z
     .number({ error: 'Enter how many credits to spend' })

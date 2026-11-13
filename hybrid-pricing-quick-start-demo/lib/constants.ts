@@ -33,14 +33,26 @@ export const TEAM_SEATS = 2
  */
 export const METER_SLUG = 'pdf_exports'
 
-/** The token the Team plan allocates every cycle, which the AI assistant consumes. */
+/**
+ * The token both plans allocate every cycle, which the AI assistant consumes.
+ * Consuming names the token and the owner; the owner's subscription decides
+ * which plan's allowance the credits come out of.
+ */
 export const TOKEN_SLUG = 'ai_credits'
-export const TEAM_AI_CREDITS = 100
 
-/** Monthly prices in cents: Personal is flat, Team is per seat plus the AI credits bundle. */
+/** How many ai_credits each plan grants per billing cycle. Same token, different line item. */
+export const AI_CREDITS: Record<Team, number> = {
+  personal: 1_000,
+  acme: 10_000,
+}
+
+/** Monthly prices in cents: Personal is flat, Team is per seat, and each has its own AI credits bundle. */
 export const PERSONAL_PRICE_CENTS = 900
 export const TEAM_SEAT_PRICE_CENTS = 1200
-export const TEAM_AI_CREDITS_PRICE_CENTS = 500
+export const AI_CREDITS_PRICE_CENTS: Record<Team, number> = {
+  personal: 500,
+  acme: 4000,
+}
 
 /** What one PDF export costs on each plan, in cents. Same meter, different line item. */
 export const EXPORT_UNIT_CENTS: Record<Team, number> = {

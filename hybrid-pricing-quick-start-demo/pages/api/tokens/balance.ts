@@ -22,8 +22,9 @@ export default async function handler(
 }
 
 /**
- * The team owner's ai_credits balance. In the Team ACME workspace it is only
- * returned to a member of the team's group, like the subscription.
+ * The team owner's ai_credits balance. In a Personal workspace that is the
+ * user's own; in the Team ACME workspace it is only returned to a member of
+ * the team's group, like the subscription.
  */
 async function GET(
   req: NextApiRequest,

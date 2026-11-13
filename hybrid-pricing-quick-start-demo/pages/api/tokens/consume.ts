@@ -22,9 +22,9 @@ export default async function handler(
 }
 
 /**
- * AI assistant: consume ai_credits from the team owner's balance. Only the
- * Team plan has a token line item, so the check fails in a Personal
- * workspace and for anyone outside the Team ACME group.
+ * AI assistant: consume ai_credits from the team owner's balance. Both plans
+ * have a token line item, so the check fails only where the owner has no
+ * live subscription or, in Team ACME, for anyone outside the group.
  */
 async function POST(
   req: NextApiRequest,
@@ -53,7 +53,7 @@ async function POST(
         error:
           ctx.team === 'acme'
             ? `${ctx.granteeId} does not have access to the ${TOKEN_SLUG} token for ${ctx.owner}. Subscribe to Team, or have a member of ${TEAM_NAME} add them to the group`
-            : `${ctx.granteeId} does not have access to the ${TOKEN_SLUG} token. Only the Team plan includes AI credits`,
+            : `${ctx.granteeId} does not have access to the ${TOKEN_SLUG} token. Subscribe to Personal`,
       })
     }
 
