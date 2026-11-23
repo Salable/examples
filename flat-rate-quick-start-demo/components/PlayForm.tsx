@@ -12,7 +12,7 @@ type Props = {
 }
 
 /**
- * Step 3: the ad-free player. Its own component because it owns a form hook
+ * The ad-free player. Its own component because it owns a form hook
  * and is only rendered once the entitlement check passes. Each submit asks the
  * server to play a track, and the server repeats the entitlement check before
  * allowing it.
