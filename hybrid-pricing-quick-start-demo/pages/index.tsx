@@ -15,6 +15,7 @@ import { FormMessages } from '@/components/FormMessages'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
 import { ResourceTooltip } from '@/components/ResourceTooltip'
+import { SharedNotebooksFeature } from '@/components/SharedNotebooksFeature'
 import { TeamMembers } from '@/components/TeamMembers'
 import { TokenPanel } from '@/components/TokenPanel'
 import { UsagePanel } from '@/components/UsagePanel'
@@ -26,6 +27,7 @@ import {
   GRANTEE_IDS,
   METER_SLUG,
   PERSONAL_PRICE_CENTS,
+  SHARED_NOTEBOOKS_ENTITLEMENT,
   TEAM_NAME,
   TEAM_OWNER,
   TEAM_SEAT_PRICE_CENTS,
@@ -264,7 +266,8 @@ export default function Home({
   // subscription grants this user, including the plan's meter and token slugs
   // with their type. No separate entitlement duplicates them. Both plans
   // meter Export PDF and allocate the AI assistant's tokens, each at its own
-  // rate and allowance.
+  // rate and allowance. Shared notebooks is gated on a plain entitlement
+  // instead, which only the Team plan grants.
   const canExport =
     entitlements.data?.entitlements.some(
       (e) => e.type === 'meter' && e.value === METER_SLUG
@@ -272,6 +275,11 @@ export default function Home({
   const canUseAi =
     entitlements.data?.entitlements.some(
       (e) => e.type === 'token' && e.value === TOKEN_SLUG
+    ) ?? false
+  const canShareNotebooks =
+    entitlements.data?.entitlements.some(
+      (e) =>
+        e.type === 'entitlement' && e.value === SHARED_NOTEBOOKS_ENTITLEMENT
     ) ?? false
 
   const loaded = Boolean(
@@ -317,7 +325,7 @@ export default function Home({
         <title>Salable Hybrid Pricing Quick Start</title>
         <meta
           name="description"
-          content="Demo of hybrid pricing with Salable: combine flat-rate, per-seat, metered and token line items on one subscription, meter the same slug at different rates per plan, and gate features on the meter and token an owner-scoped entitlement check returns."
+          content="Demo of hybrid pricing with Salable: combine flat-rate, per-seat, metered and token line items on one subscription, meter the same slug at different rates per plan, and gate features on the entitlement, meter and token an owner-scoped entitlement check returns."
         />
       </Head>
       <main className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
@@ -343,7 +351,7 @@ export default function Home({
           </div>
         </div>
 
-        {/* Identity strip: the owner and grantee the context resolves to, the plan it buys and the meter and token the demo gates on. Each term reveals its definition. */}
+        {/* Identity strip: the owner and grantee the context resolves to, the plan it buys and the entitlement, meter and token the demo gates on. Each term reveals its definition. */}
         <header className="space-y-3">
           <div>
             <div className="flex items-center gap-3">
@@ -354,7 +362,8 @@ export default function Home({
             </div>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               Hybrid pricing demo: flat-rate, per-seat, metered and token line
-              items combined on two plans. Every panel maps to a step in the{' '}
+              items combined on two plans, plus a plain entitlement on one of
+              them. Every panel maps to a step in the{' '}
               <a
                 className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
                 href="https://salable.app/docs/hybrid-pricing-quick-start?lang=sdk"
@@ -372,6 +381,7 @@ export default function Home({
                 ['owner', owner],
                 ['grantee', ctx.granteeId],
                 ['plan', ctx.team === 'acme' ? 'Team' : 'Personal'],
+                ['entitlement', SHARED_NOTEBOOKS_ENTITLEMENT],
                 ['meter', METER_SLUG],
                 ['token', TOKEN_SLUG],
               ] satisfies [ResourceKey, string][]
@@ -451,72 +461,76 @@ export default function Home({
 
         {loaded && subscription.data ? (
           <>
+            {/* A 2x2 grid: the entitlement-gated feature and the plan panel on top, the two consumption features (meter and token) below. */}
             <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-6">
-                {/* Steps 4 and 5: two features gated on the meter and token the owner-scoped check returns, each doing real work against Salable. */}
-                <ExportPdfFeature
-                  key={`export-${qs}`}
+              {/* Step 5: Shared notebooks gates on a plain entitlement only Team grants. */}
+              <SharedNotebooksFeature
+                key={`notebooks-${qs}`}
+                granteeId={ctx.granteeId}
+                owner={owner}
+                enabled={canShareNotebooks}
+                lockedHint={lockedHint({ ...locked, teamOnly: true })}
+              />
+
+              {memberOnly ? (
+                // Being in the group is what authorises a user to see and
+                // manage the team's subscription, so an outsider gets no
+                // details at all, only how to get in.
+                <Panel
+                  title={TEAM_NAME}
+                  description={
+                    <>
+                      The team&apos;s subscription, usage, credits and members
+                      are only shown to members of its group. The server
+                      withheld them for{' '}
+                      <code className="font-mono text-xs">{ctx.granteeId}</code>
+                      .
+                    </>
+                  }
+                  badge={<Badge tone="red">Not a member</Badge>}
+                >
+                  <p className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
+                    Switch to a member of {TEAM_NAME} and add{' '}
+                    {USERS[ctx.granteeId].name} from their members panel, then
+                    come back here. No checkout is needed.
+                  </p>
+                </Panel>
+              ) : (
+                // Step 3: checkout for the team's plan, or manage it once it
+                // exists.
+                <PlanPanel
                   team={ctx.team}
                   granteeId={ctx.granteeId}
                   owner={owner}
-                  enabled={canExport}
-                  current={usage.data?.current?.count ?? 0}
-                  lockedHint={lockedHint(locked)}
+                  subscription={liveSubscription}
                   onChange={refresh}
-                  onRecorded={() => startPolling(USAGE_POLL_TIMEOUT_MS)}
+                  onCancelled={() => startPolling()}
                 />
+              )}
 
-                <AiAssistantFeature
-                  key={`ai-${qs}`}
-                  team={ctx.team}
-                  granteeId={ctx.granteeId}
-                  owner={owner}
-                  enabled={canUseAi}
-                  balance={tokens.data?.balance ?? 0}
-                  lockedHint={lockedHint(locked)}
-                  onChange={refresh}
-                />
-              </div>
+              {/* Steps 4 and 5: Export PDF and the AI assistant gate on the meter and token the owner-scoped check returns, and do real work against Salable. */}
+              <ExportPdfFeature
+                key={`export-${qs}`}
+                team={ctx.team}
+                granteeId={ctx.granteeId}
+                owner={owner}
+                enabled={canExport}
+                current={usage.data?.current?.count ?? 0}
+                lockedHint={lockedHint({ ...locked, teamOnly: false })}
+                onChange={refresh}
+                onRecorded={() => startPolling(USAGE_POLL_TIMEOUT_MS)}
+              />
 
-              <div className="space-y-6">
-                {memberOnly ? (
-                  // Being in the group is what authorises a user to see and
-                  // manage the team's subscription, so an outsider gets no
-                  // details at all, only how to get in.
-                  <Panel
-                    title={TEAM_NAME}
-                    description={
-                      <>
-                        The team&apos;s subscription, usage, credits and members
-                        are only shown to members of its group. The server
-                        withheld them for{' '}
-                        <code className="font-mono text-xs">
-                          {ctx.granteeId}
-                        </code>
-                        .
-                      </>
-                    }
-                    badge={<Badge tone="red">Not a member</Badge>}
-                  >
-                    <p className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
-                      Switch to a member of {TEAM_NAME} and add{' '}
-                      {USERS[ctx.granteeId].name} from their members panel, then
-                      come back here. No checkout is needed.
-                    </p>
-                  </Panel>
-                ) : (
-                  // Step 3: checkout for the team's plan, or manage it once it
-                  // exists.
-                  <PlanPanel
-                    team={ctx.team}
-                    granteeId={ctx.granteeId}
-                    owner={owner}
-                    subscription={liveSubscription}
-                    onChange={refresh}
-                    onCancelled={() => startPolling()}
-                  />
-                )}
-              </div>
+              <AiAssistantFeature
+                key={`ai-${qs}`}
+                team={ctx.team}
+                granteeId={ctx.granteeId}
+                owner={owner}
+                enabled={canUseAi}
+                balance={tokens.data?.balance ?? 0}
+                lockedHint={lockedHint({ ...locked, teamOnly: false })}
+                onChange={refresh}
+              />
             </div>
 
             {/* Step 6: the owner's usage on the shared meter, billed at this plan's rate. Members only. */}
@@ -548,9 +562,10 @@ export default function Home({
                     The group Salable created for the owner{' '}
                     <code className="font-mono text-xs">{TEAM_OWNER}</code> at
                     checkout, with the buyer as its first member. Everyone in it
-                    passes the meter and token checks, records exports on the
-                    owner's usage record and spends from the owner's credits.
-                    The seat count caps how many can be added.
+                    passes the entitlement, meter and token checks, records
+                    exports on the owner&apos;s usage record and spends from the
+                    owner&apos;s credits. The seat count caps how many can be
+                    added.
                   </>
                 }
                 badge={
@@ -638,14 +653,24 @@ function lockedHint({
   granteeId,
   subscribed,
   isMember,
+  teamOnly,
 }: {
   team: Team
   granteeId: GranteeId
   subscribed: boolean
   isMember: boolean
+  /** The entitlement is only on the Team plan. */
+  teamOnly: boolean
 }): ReactNode {
   if (team === 'personal') {
-    return <>Subscribe to Personal to unlock it for this user only.</>
+    return teamOnly ? (
+      <>
+        Only the Team plan grants it. Switch to {TEAM_NAME}, where it is
+        included for every member of the group.
+      </>
+    ) : (
+      <>Subscribe to Personal to unlock it for this user only.</>
+    )
   }
   if (!subscribed) {
     return <>Subscribe to Team to unlock it for everyone in the group.</>
@@ -691,8 +716,8 @@ function PlanPanel({
           <>
             {name} plan for owner{' '}
             <code className="font-mono text-xs">{owner}</code>. Cancelling
-            closes the usage record for the period and removes the meter and
-            token from every check.
+            closes the usage record for the period and removes the entitlement,
+            meter and token from every check.
           </>
         }
         badge={
@@ -739,7 +764,11 @@ function PlanPanel({
             <code className="font-mono text-xs">{TOKEN_SLUG}</code>, and{' '}
             {usd.format(EXPORT_UNIT_CENTS.acme / 100)} per{' '}
             <code className="font-mono text-xs">{METER_SLUG}</code> billed at
-            period end. Creates a group with{' '}
+            period end. The plan also grants the{' '}
+            <code className="font-mono text-xs">
+              {SHARED_NOTEBOOKS_ENTITLEMENT}
+            </code>{' '}
+            entitlement. Creates a group with{' '}
             <code className="font-mono text-xs">{granteeId}</code> in it.
           </>
         ) : (
@@ -752,8 +781,13 @@ function PlanPanel({
             <code className="font-mono text-xs">{TOKEN_SLUG}</code>, and{' '}
             {usd.format(EXPORT_UNIT_CENTS.personal / 100)} per{' '}
             <code className="font-mono text-xs">{METER_SLUG}</code> billed at
-            period end. Unlocks both features for the grantee{' '}
-            <code className="font-mono text-xs">{granteeId}</code> only.
+            period end. Unlocks Export PDF and the AI assistant for the grantee{' '}
+            <code className="font-mono text-xs">{granteeId}</code> only; Shared
+            notebooks stays locked because Personal does not grant{' '}
+            <code className="font-mono text-xs">
+              {SHARED_NOTEBOOKS_ENTITLEMENT}
+            </code>
+            .
           </>
         )
       }

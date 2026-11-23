@@ -11,10 +11,13 @@ product:
     collectShippingAddress: false
     cardPrefillPreference: none
     pastDueEntitlements: true
-# Neither feature is gated on a plain entitlement: Export PDF is unlocked by
-# the pdf_exports meter and the AI assistant by the ai_credits token, both of
-# which an owner-scoped entitlement check returns from the plan's line items.
-entitlements: []
+# Export PDF and the AI assistant need no entitlement here: an owner-scoped
+# entitlement check returns the pdf_exports meter and the ai_credits token
+# automatically from the plan's line items. Shared notebooks is different: it
+# is gated on the one plain entitlement below, which a plan has to grant
+# explicitly. Only Team does.
+entitlements:
+  - name: shared_notebooks
 plans:
   # A plan for one person that combines three pricing types: a flat monthly
   # fee, a metered charge for every PDF export and a recurring allowance of
@@ -24,6 +27,8 @@ plans:
     isActive: true
     isPerpetual: false
     trialPeriodDays: null
+    # shared_notebooks is deliberately left off so only Team unlocks Shared
+    # notebooks. Add it here if Personal subscribers should receive it too.
     entitlements: []
     lineItems:
       - name: Personal
@@ -120,14 +125,16 @@ plans:
     archivedAt: null
   # A plan for a team that combines three pricing types: per-seat pricing, a
   # metered charge on the same pdf_exports meter as Personal at a lower rate,
-  # and a larger recurring allowance of the same ai_credits token. Every member
-  # of the team's group shares the one subscription, so their exports pool on
-  # one usage record and their AI usage draws from one balance.
+  # and a larger recurring allowance of the same ai_credits token. It also
+  # grants the shared_notebooks entitlement, which Personal does not. Every
+  # member of the team's group shares the one subscription, so their exports
+  # pool on one usage record and their AI usage draws from one balance.
   - name: Team
     isActive: true
     isPerpetual: false
     trialPeriodDays: null
-    entitlements: []
+    entitlements:
+      - shared_notebooks
     lineItems:
       # Seats: the price is multiplied by the number of seats, and the seat
       # count caps how many grantees the subscription's group can hold.

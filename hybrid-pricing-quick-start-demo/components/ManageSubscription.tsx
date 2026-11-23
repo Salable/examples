@@ -35,7 +35,7 @@ export function ManageSubscription({
   const cancel = useApiForm({
     schema: subscriptionIdSchema,
     action: '/api/subscription/cancel',
-    confirm: `Cancel the ${planName} subscription now? Its meter and token are removed from every member of its group once Stripe confirms the cancellation, and the usage record for the period is finalised.`,
+    confirm: `Cancel the ${planName} subscription now? Its entitlements, meter and token are removed from every member of its group once Stripe confirms the cancellation, and the usage record for the period is finalised.`,
     onSuccess: onCancelled,
   })
 

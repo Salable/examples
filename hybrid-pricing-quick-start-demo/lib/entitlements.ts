@@ -8,8 +8,9 @@ import type { Entitlement, EntitlementType } from './types'
  * Salable would return the union of every subscription they can reach. Passing
  * the team's owner is what makes the same user see different access in each
  * team. It also makes Salable include the owner's plan's meter and token
- * slugs as `type: 'meter'` / `type: 'token'` entries, which is all this demo
- * gates on: it has no plain entitlements.
+ * slugs as `type: 'meter'` / `type: 'token'` entries alongside the plain
+ * entitlements the plan grants (`type: 'entitlement'`), such as the Team
+ * plan's `shared_notebooks`.
  */
 export async function getEntitlements(
   granteeId: string,

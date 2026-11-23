@@ -8,13 +8,14 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 - **The same meter at two rates.** Each plan uses the same `pdf_exports` [meter](https://salable.app/docs/core-concepts#meter-slug). But, the rate billed for the recorded usage depends on which plan the [owner](https://salable.app/docs/core-concepts#owner) is subscribed to. Allowing the same [grantee](https://salable.app/docs/core-concepts#grantee) to record usage for two different owners at two distinct rates.
 - **The same token at two allowances.** Each plan also allocates the same `ai_credits` [token](https://salable.app/docs/core-concepts#token), but in different amounts: 1,000 a cycle on Personal and 10,000 on Team. Token balances are per owner, so the same grantee can hold a Personal balance of their own and share the team's balance at the same time.
 - **Two users, two tenants.** Use _Viewing as_ in the top-right corner to change which user you view the app as (Alice or Bob). Then change the tenant you view the app as via the team dropdown in the top-left corner (Personal or Team ACME). Each tenant is the [owner](https://salable.app/docs/core-concepts#owner) of a subscription. The pair selects which owner and [grantee](https://salable.app/docs/core-concepts#grantee) every Salable call is made for.
-- **Automatic entitlements.** The plans define no entitlements. An owner-scoped [entitlement check](https://salable.app/docs/check-entitlements) automatically returns the plan's meter and token slugs as entitlements with `type: 'meter'` and `type: 'token'` respectively. So, _Export PDF_ is unlocked wherever the check returns the `pdf_exports` meter and the _AI assistant_ wherever it returns the `ai_credits` token.
+- **Automatic entitlements from line items.** Neither _Export PDF_ nor the _AI assistant_ needs an entitlement declared on the plan. An owner-scoped [entitlement check](https://salable.app/docs/check-entitlements) automatically returns the plan's meter and token slugs as entitlements with `type: 'meter'` and `type: 'token'` respectively. So, _Export PDF_ is unlocked wherever the check returns the `pdf_exports` meter and the _AI assistant_ wherever it returns the `ai_credits` token.
+- **Feature gating.** The product declares one [entitlement](https://salable.app/docs/core-concepts#entitlement), `shared_notebooks`, on the _Team_ plan. The same entitlement check as before returns it for members of Team ACME, unlocking the _Shared notebooks_ feature, it remains locked on the _Personal_ plan as it does not grant that entitlement.
 - **Recording usage.** Each export [records usage](https://salable.app/docs/recording-usage) for the workspace's owner with an `Idempotency-Key`. Salable answers immediately and increments the owner's usage asynchronously.
 - **Consuming tokens.** Each summary [consumes tokens](https://salable.app/docs/token-billing#consuming-tokens) immediately for the workspace's owner. If the user has an insufficient balance then the request rejects with  `422 Insufficient token balance` until the balance is sufficient again.
 - **Usage and credits shared by the owner.** Everyone in the [group](https://salable.app/docs/grantee-groups) attached to the subscription owned by Team ACME records exports on the same usage record and consumes tokens from the same balance. This allows usage and tokens to be combined with per-seat billing on the same subscription.
 - **Subscription management.** Turn auto-renew off and on, or cancel immediately, in either workspace. Cancelling Team locks the features for every member of the group at once.
 
-> NOTE: To keep the code close to the guide, the grantees are hardcoded as `user_alice` and `user_bob`, the team's owner as `team_acme`, the meter as `pdf_exports`, the token as `ai_credits` and the per-seat line item slug as `hybrid_team_seats`. In the Personal workspace the owner is the user's own ID.
+> NOTE: To keep the code close to the guide, the grantees are hardcoded as `user_alice` and `user_bob`, the team's owner as `team_acme`, the meter as `pdf_exports`, the token as `ai_credits`, the entitlement as `shared_notebooks` and the per-seat line item slug as `hybrid_team_seats`. In the Personal workspace the owner is the user's own ID.
 
 ## Prerequisites
 
@@ -44,7 +45,7 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 
    > NOTE: The secret key should never be used outside the server. Only use it inside API routes and `getServerSideProps`.
 
-2. **Import the example product.** The repository contains a `product.yaml`, which describes the _Notes Hybrid_ product, its _Personal_ and _Team_ plans and their line items. Importing it also creates the `pdf_exports` meter and the `ai_credits` token in Salable and Stripe. Import it one of two ways:
+2. **Import the example product.** The repository contains a `product.yaml`, which describes the _Notes Hybrid_ product, its _Personal_ and _Team_ plans and their line items. Importing it also creates the `pdf_exports` meter and the `ai_credits` token in Salable and Stripe, and the `shared_notebooks` entitlement in Salable. Import it one of two ways:
 
    - **Script (recommended).** Run
 
@@ -71,21 +72,21 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 
 ## Using the Demo
 
-1. **Start from nothing.** When first opened, the page is viewing as Alice in her Personal workspace. Both features are locked and there is no subscription. The _Owner_, _Grantee_, _Meter_ and _Token_ chips show which IDs the entitlement check is made with and which slugs the features are gated on; switch user or workspace and watch the owner and grantee change.
+1. **Start from nothing.** When first opened, the page is viewing as Alice in her Personal workspace. All three features are locked and there is no subscription. The _Owner_, _Grantee_, _Entitlement_, _Meter_ and _Token_ chips show which IDs the entitlement check is made with and which slugs the features are gated on; switch user or workspace and watch the owner and grantee change.
 
 2. **Subscribe to Personal.** Press _Subscribe to Personal_ with Alice selected. On Stripe's Checkout, enter any email address and pay with Stripe's test card `4242 4242 4242 4242` using any future expiry, CVC and cardholder name. Stripe shows the $9.00 flat fee, the $5.00 AI credits bundle and the metered line at $0.25 per export with nothing to pay for it yet.
-   - Once returned to the demo, both features are unlocked: the check returned the `pdf_exports` meter and the `ai_credits` token. The subscription is owned by `user_alice`, the usage panel shows a `current` record with a count of 0 and the _AI credit balance_ panel shows 1,000 `ai_credits`.
+   - Once returned to the demo, _Export PDF_ and the _AI assistant_ are unlocked: the check returned the `pdf_exports` meter and the `ai_credits` token. _Shared notebooks_ stays locked with a _Requires Team_ badge, because the Personal plan does not grant the `shared_notebooks` entitlement. The subscription is owned by `user_alice`, the usage panel shows a `current` record with a count of 0 and the _AI credit balance_ panel shows 1,000 `ai_credits`.
 
 3. **Export some notes.** Enter 3 in _Notes to export_ and press _Export to PDF_. This increments the usage by 3 for the `pdf_exports` meter for `user_alice`. After a short delay the request is processed and the usage displays as 3 with the estimated charge at $0.75 using the Personal rate of $0.25.
 
-4. **Subscribe to Team.** Pick _Team ACME_ from the workspace dropdown while still viewing as Alice. Both features are locked again, because the check is now scoped to the owner `team_acme`, which doesn't have a subscription. Press _Subscribe to Team_; Stripe shows 2 seats at $12.00 each, the $40.00 AI credits bundle and the metered line at $0.10 per export. Pay with the same test card details as before.
-   - Once returned, both features are unlocked: the check for `team_acme` returns the meter and the token. The usage panel shows a separate record for `team_acme` with a count of 0, the _AI credit balance_ panel shows 10,000 `ai_credits`, and the _Team ACME members_ panel shows the group Salable created at checkout with Alice as its only member and _1 of 2 seats used_.
+4. **Subscribe to Team.** Pick _Team ACME_ from the workspace dropdown while still viewing as Alice. All three features are locked, because the check is now scoped to the owner `team_acme`, which doesn't have a subscription. Press _Subscribe to Team_; Stripe shows 2 seats at $12.00 each, the $40.00 AI credits bundle and the metered line at $0.10 per export. Pay with the same test card details as before.
+   - Once returned, all three features are unlocked: the check for `team_acme` returns the `shared_notebooks` entitlement as well as the meter and the token. Press _Share a notebook_ to see the entitlement-gated feature in action; it only pretends to do the work, the entitlement check that unlocked it was real. The usage panel shows a separate record for `team_acme` with a count of 0, the _AI credit balance_ panel shows 10,000 `ai_credits`, and the _Team ACME members_ panel shows the group Salable created at checkout with Alice as its only member and _1 of 2 seats used_.
 
 5. **Export at the Team rate.** Export 2 notes. This time the usage lands on `team_acme`'s record: the count is incremented to 2 and the estimated charge reads $0.20, because the Team plan's line item bills the same meter at $0.10. This is separate to Alice's Personal usage consumption of 3, costing $0.75.
 
 6. **Spend some credits.** Enter 10 in _Credits to spend_ and press _Summarise my notes_. The balance immediately drops to 9,990 as consumption is synchronous. If you switch to Alice's Personal workspace, her own balance still reads 1,000: the credits came out of `team_acme`'s balance, because the Team plan's line item grants the same token to a different owner.
 
-7. **Add Bob and share the meter.** Back in Team ACME, press _Add Bob Johnson_ in the members panel and the badge changes to _2 of 2 seats used_. Switch _Viewing as_ to Bob and both features are unlocked for him through his membership to the group, allowing Bob to see the same usage, balance and members panels as Alice without needing to checkout again. Export a single note as Bob and the team's count rises to 3 and the estimated cost increases to $0.30. If you switch to his Personal workspace, both features are locked again because Bob has no Personal subscription.
+7. **Add Bob and share the meter.** Back in Team ACME, press _Add Bob Johnson_ in the members panel and the badge changes to _2 of 2 seats used_. Switch _Viewing as_ to Bob and all three features are unlocked for him through his membership to the group, allowing Bob to see the same usage, balance and members panels as Alice without needing to checkout again. Export a single note as Bob and the team's count rises to 3 and the estimated cost increases to $0.30. If you switch to his Personal workspace, all three features are locked again because Bob has no Personal subscription, and _Shared notebooks_ would stay locked there even if he had one.
 
 8. **Remove Bob.** Switch back to Alice in the Team ACME workspace and press _Remove_ on Bob's row. The seat is freed and, viewing as Bob again, the Team ACME workspace is locked: the features are gated and the subscription, usage, balance and members panels are replaced by a _Not a member_ notice.
 
@@ -93,7 +94,7 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 
 10. **Subscription management.** When viewing as Alice, use the Manage panel to _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore.
 
-11. **Cancel Team.** Press _Cancel subscription_ in the Manage Team panel and confirm. Once Stripe confirms, the meter and token drop out of the check for every member, both features lock in the Team ACME workspace for all members, the team's usage record changes from `current` to `final` with the count that will be invoiced, and the members panel reports no group. Alice's Personal subscription, access, and usage are unaffected.
+11. **Cancel Team.** Press _Cancel subscription_ in the Manage Team panel and confirm. Once Stripe confirms, the entitlement, meter and token drop out of the check for every member, all three features lock in the Team ACME workspace for all members, the team's usage record changes from `current` to `final` with the count that will be invoiced, and the members panel reports no group. Alice's Personal subscription, access, and usage are unaffected.
 
 12. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plans; the usage records and token balances go with their owners.
 
@@ -124,6 +125,7 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 - [Grantees and groups](https://salable.app/docs/grantee-groups), how owners, groups, memberships and seats fit together
 - [Manage seats](https://salable.app/docs/manage-seats), adding, removing and replacing members and changing the seat count
 - [Quick checkout](https://salable.app/docs/quick-checkout), creating checkout links without needing to manage a cart
-- [Checking entitlements](https://salable.app/docs/check-entitlements), the owner-scoped call that returns the meter and token both features gate on
+- [Checking entitlements](https://salable.app/docs/check-entitlements), the owner-scoped call that returns the entitlement, meter and token the features gate on
+- [Entitlements](https://salable.app/docs/core-concepts#entitlement), the plan-declared values the check returns alongside the automatic meter and token entries
 - [Cancelling a subscription](https://salable.app/docs/cancel-subscription), immediate cancel versus auto-renew
 - [Salable Node SDK](https://github.com/Salable/sdk)

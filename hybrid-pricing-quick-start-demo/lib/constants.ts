@@ -40,6 +40,14 @@ export const METER_SLUG = 'pdf_exports'
  */
 export const TOKEN_SLUG = 'ai_credits'
 
+/**
+ * The one plain entitlement in the product. Unlike the meter and token, which
+ * the check returns automatically from a plan's line items, a plan has to
+ * grant it explicitly: only Team does, so Shared notebooks is locked in the
+ * Personal workspace.
+ */
+export const SHARED_NOTEBOOKS_ENTITLEMENT = 'shared_notebooks'
+
 /** How many ai_credits each plan grants per billing cycle. Same token, different line item. */
 export const AI_CREDITS: Record<Team, number> = {
   personal: 1_000,
