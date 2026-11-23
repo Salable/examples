@@ -20,7 +20,7 @@ export const RESOURCES: Record<ResourceKey, Resource> = {
     label: 'Owner',
     plural: 'Owners',
     description:
-      'The tenant that holds the subscription and is billed for it. Checkouts, subscriptions, and entitlement checks are all scoped to an owner.',
+      'The tenant that holds the subscription and is billed for it. Checkouts, subscriptions, consuming tokens, recording usage and entitlement checks are all scoped to an owner.',
     href: `${CORE_CONCEPTS}#owner`,
   },
   grantee: {
