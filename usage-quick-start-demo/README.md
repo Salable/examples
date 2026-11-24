@@ -10,7 +10,7 @@ A simple demo following the [Salable Usage-Based Billing Quick Start](https://sa
 - **Handling missing usage records.** Recording usage without a Pro subscription returns a 404 from Salable, which the demo turns into a readable message.
 - **Viewing current usage.** The count on the current period's usage record, the estimated charge and the history of records with their status.
 - **Managing the subscription.** Turn auto-renew off and on, or cancel immediately. See the features be automatically locked upon cancellation and the usage record finalised.
-- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to change the card and customer details, and see every invoice behind the subscription with links to the hosted invoice and its PDF.
+- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details. View and download every invoice for the subscription inside the demo as well.
 
 > NOTE: To keep the code identical to the guide, the [owner](https://salable.app/docs/core-concepts#owner) is hardcoded as `company_acme`, the [grantee](https://salable.app/docs/core-concepts#grantee) as `user_alice`, the [meter](https://salable.app/docs/core-concepts#meter-slug) as `image_generations` and the [entitlements](https://salable.app/docs/understanding-entitlements) as `high_resolution_exports` and `priority_processing`.
 

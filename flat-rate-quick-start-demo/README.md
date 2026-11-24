@@ -8,7 +8,7 @@ A simple demo following the [Salable Flat-Rate Billing Quick Start](https://sala
 - **Feature gating.** Ad-free listening is locked until an [entitlement check](https://salable.app/docs/check-entitlements), returns the `ad_free_listening` entitlement. The check runs on the server in `/api/play` before the track is allowed to play, and on the client to hide the player. The playback itself is simulated; only the entitlement check is real.
 - **Viewing the entitlement check.** What the check returns for the [grantee](https://salable.app/docs/core-concepts#grantee), with its type and expiry, so you can watch `ad_free_listening` appear after checkout and disappear after cancellation.
 - **Managing the subscription.** Turn auto-renew off and on, or cancel immediately. See the feature be automatically locked upon cancellation.
-- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to change the card and customer details, and see every invoice behind the subscription with links to the hosted invoice and its PDF.
+- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details. View and download every invoice for the subscription inside the demo as well.
 
 > NOTE: To keep the code identical to the guide, the [owner](https://salable.app/docs/core-concepts#owner) is hardcoded as `company_acme`, the grantee as `user_alice` and the [entitlement](https://salable.app/docs/understanding-entitlements) as `ad_free_listening`.
 

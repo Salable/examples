@@ -14,7 +14,7 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 - **Consuming tokens.** Each summary [consumes tokens](https://salable.app/docs/token-billing#consuming-tokens) immediately for the workspace's owner. If the user has an insufficient balance then the request rejects with `422 Insufficient token balance` until the balance is sufficient again.
 - **Usage and credits shared by the owner.** Everyone in the [group](https://salable.app/docs/grantee-groups) attached to the subscription owned by Team ACME records exports on the same usage record and consumes tokens from the same balance. This allows usage and tokens to be combined with per-seat billing on the same subscription.
 - **Subscription management.** Turn auto-renew off and on, or cancel immediately, in either workspace. Cancelling Team locks the features for every member of the group at once.
-- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details, and see every invoice behind the subscription with links to the hosted invoice and its PDF.
+- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details. View and download every invoice for the subscription inside the demo as well.
 
 > NOTE: To keep the code close to the guide, the grantees are hardcoded as `user_alice` and `user_bob`, the team's owner as `team_acme`, the meter as `pdf_exports`, the token as `ai_credits`, the entitlement as `shared_notebooks` and the per-seat line item slug as `hybrid_team_seats`. In the Personal workspace the owner is the user's own ID.
 
