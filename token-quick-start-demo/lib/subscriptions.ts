@@ -24,6 +24,7 @@ export async function getSubscriptionSummary(): Promise<SubscriptionSummary> {
           cancelAtPeriodEnd: starter.cancelAtPeriodEnd ?? null,
           cancelledAt: starter.cancelledAt ?? null,
           isPerpetual: starter.isPerpetual ?? null,
+          ownerId: starter.ownerId ?? null,
         }
       : null,
   }

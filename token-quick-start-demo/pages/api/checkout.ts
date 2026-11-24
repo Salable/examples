@@ -35,7 +35,7 @@ async function POST(
   const appUrl = 'http://localhost:3000'
 
   try {
-    // Step 4: Generate a Stripe Checkout link.
+    // Generate a Stripe Checkout link.
     // The top-up is a one-off purchase, so interval and intervalCount are null.
     // Paying for it produces a receipt and a token record. Because the plan
     // has "Create a perpetual subscription" enabled (isPerpetual in
