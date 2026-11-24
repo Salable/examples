@@ -9,6 +9,7 @@ import { Badge, type BadgeTone } from '@/components/Badge'
 import { Button } from '@/components/Button'
 import { CheckoutForm } from '@/components/CheckoutForm'
 import { FormMessages } from '@/components/FormMessages'
+import { InvoicesPanel } from '@/components/InvoicesPanel'
 import { GenerateForm } from '@/components/GenerateForm'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
@@ -31,6 +32,7 @@ import { getUsage } from '@/lib/usage'
 import type {
   ApiErrorResponse,
   Entitlement,
+  Invoice,
   Subscription,
   SubscriptionSummary,
   UsageRecordStatus,
@@ -57,6 +59,7 @@ const STATUS_TONES: Record<UsageRecordStatus, BadgeTone> = {
   current: 'green',
   final: 'zinc',
   recorded: 'amber',
+  overage: 'amber',
 }
 
 const usd = new Intl.NumberFormat('en-US', {
@@ -133,6 +136,13 @@ export default function Home({
       ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
     }
   )
+  // Invoices only exist once the owner holds the Pro subscription, so the key
+  // is null until then and SWR skips the request.
+  const invoices = useSWR<{ data: Invoice[] }>(
+    subscription.data?.pro ? '/api/subscription/invoices' : null,
+    fetcher,
+    { ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }) }
+  )
   const usage = useSWR<UsageSummary>('/api/usage/records', fetcher, {
     fallbackData: initialUsage ?? undefined,
     ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
@@ -141,6 +151,7 @@ export default function Home({
   function refresh() {
     void entitlements.mutate()
     void subscription.mutate()
+    void invoices.mutate()
     void usage.mutate()
   }
 
@@ -158,7 +169,7 @@ export default function Home({
     window.setTimeout(() => setExportHd('done'), 1_200)
   }
 
-  // Step 4 of the guide: the owner-scoped check returns the image_generations
+  // The owner-scoped check returns the image_generations
   // meter slug with type 'meter' while the Pro subscription is active. Check
   // both type and value, because a token can share a meter's slug. Export HD
   // is gated on a plain entitlement the Pro plan also grants.
@@ -173,7 +184,10 @@ export default function Home({
 
   const loaded = Boolean(entitlements.data && subscription.data && usage.data)
   const isValidating =
-    entitlements.isValidating || subscription.isValidating || usage.isValidating
+    entitlements.isValidating ||
+    subscription.isValidating ||
+    invoices.isValidating ||
+    usage.isValidating
   const error = entitlements.error ?? subscription.error ?? usage.error
   const errorMessage =
     error instanceof Error ? error.message : loaded ? null : initialError
@@ -211,7 +225,7 @@ export default function Home({
                 </h1>
               </div>
               <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Usage-based billing demo. Every panel maps to a step in the{' '}
+                Usage-based billing demo. Built by following the{' '}
                 <a
                   className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
                   href="https://salable.app/docs/usage-quick-start?lang=sdk"
@@ -310,7 +324,7 @@ export default function Home({
           <>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-6">
-                {/* Steps 3 and 4: the owner-scoped entitlement check gates the generate form. */}
+                {/* The owner-scoped entitlement check gates the generate form. */}
                 <Panel
                   title="Generate images"
                   description={
@@ -413,7 +427,7 @@ export default function Home({
               </div>
 
               <div className="space-y-6">
-                {/* Step 2: checkout for the Pro plan, or manage it once it exists. */}
+                {/* Checkout for the Pro plan, or manage it once it exists. */}
                 <PlanPanel
                   subscription={subscription.data.pro}
                   description={
@@ -438,7 +452,7 @@ export default function Home({
               </div>
             </div>
 
-            {/* Step 5: the owner's usage this period and every record behind it. */}
+            {/* The owner's usage this period and every record behind it. */}
             <Panel
               title="Usage this period"
               description={
@@ -532,6 +546,15 @@ export default function Home({
               )}
             </Panel>
 
+            {/* The invoices behind the Pro subscription, with Stripe's hosted and PDF links. */}
+            {subscription.data.pro ? (
+              <InvoicesPanel
+                invoices={invoices.data?.data}
+                error={invoices.error}
+                isLoading={invoices.isLoading}
+              />
+            ) : null}
+
             {/* Reset: test-mode-only deletes that cascade to the usage records. */}
             <footer className="rounded-xl border border-dashed border-black/15 p-5 dark:border-white/20">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -583,7 +606,7 @@ export default function Home({
 }
 
 /**
- * Step 2: a Subscribe panel until the owner holds a live Pro subscription,
+ * A Subscribe panel until the owner holds a live Pro subscription,
  * then a Manage panel for that subscription.
  */
 function PlanPanel({

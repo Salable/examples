@@ -14,7 +14,7 @@ type Props = {
 }
 
 /**
- * Step 3: the generate form. Its own component because it owns a form hook and
+ * The generate form. Its own component because it owns a form hook and
  * is only rendered once the entitlement check passes. Each submit records the
  * number of images as usage against the meter.
  */

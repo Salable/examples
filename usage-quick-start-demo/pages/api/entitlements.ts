@@ -17,7 +17,7 @@ export default async function handler(
   }
 }
 
-/** Step 6 of the guide: which entitlements the grantee currently holds. */
+/** Which entitlements the grantee currently holds. */
 async function GET(
   req: NextApiRequest,
   res: NextApiResponse<{ entitlements: Entitlement[] } | ApiErrorResponse>

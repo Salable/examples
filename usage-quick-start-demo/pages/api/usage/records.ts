@@ -16,7 +16,7 @@ export default async function handler(
   }
 }
 
-/** Step 5 of the guide: the owner's usage records for the meter. */
+/** The owner's usage records for the meter. */
 async function GET(
   req: NextApiRequest,
   res: NextApiResponse<UsageSummary | ApiErrorResponse>

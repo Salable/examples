@@ -10,7 +10,7 @@ const STATUSES = new Set<UsageRecordStatus>([
 ])
 
 /**
- * Step 5 of the guide: the owner's usage records for one meter. The guide only
+ * The owner's usage records for one meter. The guide only
  * asks for `status: ['current']`; `final` is included too so the demo can show
  * a period being closed when the Pro subscription is cancelled. Newest first,
  * so the current record is always on the first page. An owner Salable has not
