@@ -33,9 +33,9 @@ async function POST(
   const appUrl = 'http://localhost:3000'
 
   try {
-    // Step 2: Generate a Stripe Checkout link for the Pro plan, billed
+    // Generate a Stripe Checkout link for the Pro plan, billed
     // monthly on usage. Once the customer completes checkout, Salable creates
-    // the usage record that step 3 increments.
+    // the usage record that recording usage increments.
     const response = await getSalable().api.checkout.post({
       planId: getProPlanId(),
       owner: OWNER,
