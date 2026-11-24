@@ -18,7 +18,7 @@ type Props = {
 }
 
 /**
- * Step 4: the team's members against its seats, with controls to add the
+ * The team's members against its seats, with controls to add the
  * other demo user to the group or remove a member. Only rendered for a
  * member of the group, and the API refuses changes from anyone else.
  */

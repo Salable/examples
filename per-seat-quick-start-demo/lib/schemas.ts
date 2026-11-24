@@ -13,6 +13,9 @@ export const contextSchema = z.object({
 /** Checkout buys the team's plan for the user, so it needs nothing more. */
 export const checkoutSchema = contextSchema
 
+/** The billing portal is opened for the owner the user and team resolve to. */
+export const portalSchema = contextSchema
+
 /**
  * Add or remove one of the demo users in the team's group. `viewer` is the
  * user making the change, who must already be in the group; in a real app it

@@ -41,6 +41,14 @@ export function contextSearchParams({ granteeId, team }: Context): string {
   return new URLSearchParams({ granteeId, team }).toString()
 }
 
+/**
+ * Query string for the page itself, which reads `?grantee=&team=`. Used in the
+ * URLs Stripe sends the browser back to, so it lands in the same workspace.
+ */
+export function contextPageParams({ granteeId, team }: Context): string {
+  return new URLSearchParams({ grantee: granteeId, team }).toString()
+}
+
 /** The other demo user, i.e. the one a member can add to the team. */
 export function otherGrantee(granteeId: GranteeId): GranteeId {
   return granteeId === 'user_alice' ? 'user_bob' : 'user_alice'
