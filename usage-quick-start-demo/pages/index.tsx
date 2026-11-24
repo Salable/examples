@@ -322,134 +322,130 @@ export default function Home({
 
         {entitlements.data && subscription.data && usage.data ? (
           <>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-6">
-                {/* The owner-scoped entitlement check gates the generate form. */}
-                <Panel
-                  title="Generate images"
-                  description={
-                    <>
-                      Gated by the{' '}
-                      <code className="font-mono text-xs">{METER_SLUG}</code>{' '}
-                      meter for{' '}
-                      <code className="font-mono text-xs">{GRANTEE}</code>,
-                      returned by an owner-scoped entitlement check while the
-                      Pro plan is active. No separate entitlement is needed.
-                      Each generation is recorded as usage against the meter.
-                    </>
-                  }
-                  badge={
-                    canGenerate ? (
-                      <Badge tone="green">Access granted</Badge>
-                    ) : (
-                      <Badge tone="red">Requires Pro</Badge>
-                    )
-                  }
-                >
-                  {canGenerate ? (
-                    <GenerateForm
-                      current={currentCount}
-                      onChange={refresh}
-                      onRecorded={() => setIsPolling(true)}
+            <div className="grid gap-6 md:grid-flow-col md:grid-cols-2 md:grid-rows-2">
+              {/* The owner-scoped entitlement check gates the generate form. */}
+              <Panel
+                title="Generate images"
+                description={
+                  <>
+                    Gated by the{' '}
+                    <code className="font-mono text-xs">{METER_SLUG}</code>{' '}
+                    meter for{' '}
+                    <code className="font-mono text-xs">{GRANTEE}</code>,
+                    returned by an owner-scoped entitlement check while the Pro
+                    plan is active. No separate entitlement is needed. Each
+                    generation is recorded as usage against the meter.
+                  </>
+                }
+                badge={
+                  canGenerate ? (
+                    <Badge tone="green">Access granted</Badge>
+                  ) : (
+                    <Badge tone="red">Requires Pro</Badge>
+                  )
+                }
+              >
+                {canGenerate ? (
+                  <GenerateForm
+                    current={currentCount}
+                    onChange={refresh}
+                    onRecorded={() => setIsPolling(true)}
+                  />
+                ) : (
+                  <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
+                    <p>
+                      <span className="font-mono text-xs">{GRANTEE}</span> does
+                      not have access to the{' '}
+                      <span className="font-mono text-xs">{METER_SLUG}</span>{' '}
+                      meter, so the generation UI stays hidden.
+                    </p>
+                    <p className="mt-2">Subscribe to Pro to unlock it.</p>
+                  </div>
+                )}
+              </Panel>
+
+              {/* A second gate, on an entitlement that unlocks a feature without recording usage. The export is simulated. */}
+              <Panel
+                title="Export HD"
+                description={
+                  <>
+                    Gated by the{' '}
+                    <code className="font-mono text-xs">
+                      {EXPORT_HD_ENTITLEMENT}
+                    </code>{' '}
+                    entitlement, which the Pro plan also grants. The export
+                    itself is simulated and records no usage.
+                  </>
+                }
+                badge={
+                  canExportHd ? (
+                    <Badge tone="green">Access granted</Badge>
+                  ) : (
+                    <Badge tone="red">Requires Pro</Badge>
+                  )
+                }
+              >
+                {canExportHd ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      Pretend an image has been generated and export it at full
+                      resolution.
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={handleExportHd}
+                      pending={exportHd === 'exporting'}
+                      pendingLabel="Exporting…"
+                    >
+                      Export image in HD
+                    </Button>
+                    <FormMessages
+                      message={
+                        exportHd === 'done'
+                          ? 'Exported image.png at 3840×2160. Nothing was sent to Salable; only the entitlement check was real.'
+                          : null
+                      }
                     />
-                  ) : (
-                    <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
-                      <p>
-                        <span className="font-mono text-xs">{GRANTEE}</span>{' '}
-                        does not have access to the{' '}
-                        <span className="font-mono text-xs">{METER_SLUG}</span>{' '}
-                        meter, so the generation UI stays hidden.
-                      </p>
-                      <p className="mt-2">Subscribe to Pro to unlock it.</p>
-                    </div>
-                  )}
-                </Panel>
-
-                {/* A second gate, on an entitlement that unlocks a feature without recording usage. The export is simulated. */}
-                <Panel
-                  title="Export HD"
-                  description={
-                    <>
-                      Gated by the{' '}
-                      <code className="font-mono text-xs">
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
+                    <p>
+                      <span className="font-mono text-xs">{GRANTEE}</span> does
+                      not have the{' '}
+                      <span className="font-mono text-xs">
                         {EXPORT_HD_ENTITLEMENT}
-                      </code>{' '}
-                      entitlement, which the Pro plan also grants. The export
-                      itself is simulated and records no usage.
-                    </>
-                  }
-                  badge={
-                    canExportHd ? (
-                      <Badge tone="green">Access granted</Badge>
-                    ) : (
-                      <Badge tone="red">Requires Pro</Badge>
-                    )
-                  }
-                >
-                  {canExportHd ? (
-                    <div className="space-y-3">
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Pretend an image has been generated and export it at
-                        full resolution.
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={handleExportHd}
-                        pending={exportHd === 'exporting'}
-                        pendingLabel="Exporting…"
-                      >
-                        Export image in HD
-                      </Button>
-                      <FormMessages
-                        message={
-                          exportHd === 'done'
-                            ? 'Exported image.png at 3840×2160. Nothing was sent to Salable; only the entitlement check was real.'
-                            : null
-                        }
-                      />
-                    </div>
-                  ) : (
-                    <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
-                      <p>
-                        <span className="font-mono text-xs">{GRANTEE}</span>{' '}
-                        does not have the{' '}
-                        <span className="font-mono text-xs">
-                          {EXPORT_HD_ENTITLEMENT}
-                        </span>{' '}
-                        entitlement.
-                      </p>
-                      <p className="mt-2">
-                        Subscribe to Pro to unlock HD export.
-                      </p>
-                    </div>
-                  )}
-                </Panel>
-              </div>
+                      </span>{' '}
+                      entitlement.
+                    </p>
+                    <p className="mt-2">
+                      Subscribe to Pro to unlock HD export.
+                    </p>
+                  </div>
+                )}
+              </Panel>
 
-              <div className="space-y-6">
-                {/* Checkout for the Pro plan, or manage it once it exists. */}
-                <PlanPanel
-                  subscription={subscription.data.pro}
-                  description={
-                    <>
-                      {usd.format(UNIT_AMOUNT_CENTS / 100)} per image
-                      generation, billed monthly on usage. Grants the{' '}
-                      <code className="font-mono text-xs">{METER_SLUG}</code>{' '}
-                      meter plus the{' '}
-                      <code className="font-mono text-xs">
-                        {EXPORT_HD_ENTITLEMENT}
-                      </code>{' '}
-                      and{' '}
-                      <code className="font-mono text-xs">
-                        {PRIORITY_ENTITLEMENT}
-                      </code>{' '}
-                      entitlements.
-                    </>
-                  }
-                  onChange={refresh}
-                  onCancelled={() => setIsPolling(true)}
-                />
-              </div>
+              {/* Checkout for the Pro plan, or manage it once it exists. */}
+              <PlanPanel
+                subscription={subscription.data.pro}
+                description={
+                  <>
+                    {usd.format(UNIT_AMOUNT_CENTS / 100)} per image generation,
+                    billed monthly on usage. Grants the{' '}
+                    <code className="font-mono text-xs">{METER_SLUG}</code>{' '}
+                    meter plus the{' '}
+                    <code className="font-mono text-xs">
+                      {EXPORT_HD_ENTITLEMENT}
+                    </code>{' '}
+                    and{' '}
+                    <code className="font-mono text-xs">
+                      {PRIORITY_ENTITLEMENT}
+                    </code>{' '}
+                    entitlements.
+                  </>
+                }
+                onChange={refresh}
+                onCancelled={() => setIsPolling(true)}
+              />
             </div>
 
             {/* The owner's usage this period and every record behind it. */}
