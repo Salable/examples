@@ -38,7 +38,7 @@ async function POST(
   const { track } = parsed.data
 
   try {
-    // Step 3: only allow the action when the grantee holds the
+    // Only allow the action when the grantee holds the
     // ad_free_listening entitlement. getEntitlements scopes the check to the
     // owner, so only company_acme's subscriptions count.
     const entitlements = await getEntitlements(GRANTEE)

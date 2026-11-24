@@ -1,5 +1,6 @@
 import type {
   CheckEntitlementsSchema_data_entitlements,
+  GetSubscriptionInvoicesSchema_data,
   GetSubscriptionListSchema_data,
   GetUsageListSchema_data,
 } from '@salable/sdk/dist/sdk/models'
@@ -28,9 +29,37 @@ export type Entitlement = Omit<
 export type Subscription = Required<
   Pick<
     GetSubscriptionListSchema_data,
-    'status' | 'startDate' | 'cancelAtPeriodEnd' | 'cancelledAt' | 'isPerpetual'
+    | 'status'
+    | 'startDate'
+    | 'cancelAtPeriodEnd'
+    | 'cancelledAt'
+    | 'isPerpetual'
+    | 'ownerId'
   >
 > & { id: NonNullable<GetSubscriptionListSchema_data['id']> }
+
+/** Stripe's invoice statuses, as returned by the subscription invoices endpoint. */
+export type InvoiceStatus = 'draft' | 'open' | 'paid' | 'uncollectible' | 'void'
+
+/**
+ * One row of a subscription's invoice list. While the subscription is set to
+ * renew the list also previews the upcoming invoice, which has no number and
+ * no hosted or PDF link yet.
+ */
+export type Invoice = Required<
+  Pick<
+    GetSubscriptionInvoicesSchema_data,
+    | 'number'
+    | 'created'
+    | 'periodStart'
+    | 'periodEnd'
+    | 'total'
+    | 'currency'
+    | 'hostedInvoiceUrl'
+    | 'invoicePdf'
+    | 'billingReason'
+  >
+> & { id: string; status: InvoiceStatus | null; upcoming: boolean }
 
 /**
  * A usage record's lifecycle: `current` while the billing period is open,

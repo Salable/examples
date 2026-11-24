@@ -10,6 +10,7 @@ A simple demo following the [Salable Usage-Based Billing Quick Start](https://sa
 - **Handling missing usage records.** Recording usage without a Pro subscription returns a 404 from Salable, which the demo turns into a readable message.
 - **Viewing current usage.** The count on the current period's usage record, the estimated charge and the history of records with their status.
 - **Managing the subscription.** Turn auto-renew off and on, or cancel immediately. See the features be automatically locked upon cancellation and the usage record finalised.
+- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details. View and download every invoice for the subscription inside the demo as well.
 
 > NOTE: To keep the code identical to the guide, the [owner](https://salable.app/docs/core-concepts#owner) is hardcoded as `company_acme`, the [grantee](https://salable.app/docs/core-concepts#grantee) as `user_alice`, the [meter](https://salable.app/docs/core-concepts#meter-slug) as `image_generations` and the [entitlements](https://salable.app/docs/understanding-entitlements) as `high_resolution_exports` and `priority_processing`.
 
@@ -78,9 +79,11 @@ A simple demo following the [Salable Usage-Based Billing Quick Start](https://sa
 
 5. **Manage the subscription.** In the Pro panel press _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore.
 
-6. **Cancel Pro.** Press _Cancel subscription_ in the Pro panel and confirm. Once Stripe confirms, the meter and the entitlements drop out of the entitlement check, Generate images and Export HD are locked again and the usage record changes from `current` to `final` with a Finalised date.
+6. **Check billing.** The Invoices panel lists the invoice Stripe raised at checkout, with _View_ and _PDF_ links, and previews the next one while auto-renew is on, this is where the usage recorded so far will be charged. Press _Manage billing_ to open Stripe's billing portal for the owner, where the card and customer details can be changed.
 
-7. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plan.
+7. **Cancel Pro.** Press _Cancel subscription_ in the Pro panel and confirm. Once Stripe confirms, the meter and the entitlements drop out of the entitlement check, Generate images and Export HD are locked again and the usage record changes from `current` to `final` with a Finalised date.
+
+8. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plan.
 
 ## Troubleshooting
 

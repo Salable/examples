@@ -1,6 +1,7 @@
 import type {
   CheckEntitlementsSchema_data_entitlements,
   GetGroupDetailSchema_data_memberships_data,
+  GetSubscriptionInvoicesSchema_data,
   GetSubscriptionListSchema_data,
   GetTokenBalanceListSchema_data,
   GetTokenBalanceListSchema_data_records,
@@ -31,13 +32,41 @@ export type Entitlement = Omit<
 export type Subscription = Required<
   Pick<
     GetSubscriptionListSchema_data,
-    'status' | 'startDate' | 'cancelAtPeriodEnd' | 'cancelledAt' | 'isPerpetual'
+    | 'status'
+    | 'startDate'
+    | 'cancelAtPeriodEnd'
+    | 'cancelledAt'
+    | 'isPerpetual'
+    | 'ownerId'
   >
 > & {
   id: NonNullable<GetSubscriptionListSchema_data['id']>
   /** The group the subscription's plan grants access to. Salable creates it at checkout. */
   groupId: string | null
 }
+
+/** Stripe's invoice statuses, as returned by the subscription invoices endpoint. */
+export type InvoiceStatus = 'draft' | 'open' | 'paid' | 'uncollectible' | 'void'
+
+/**
+ * One row of a subscription's invoice list. While the subscription is set to
+ * renew the list also previews the upcoming invoice, which has no number and
+ * no hosted or PDF link yet.
+ */
+export type Invoice = Required<
+  Pick<
+    GetSubscriptionInvoicesSchema_data,
+    | 'number'
+    | 'created'
+    | 'periodStart'
+    | 'periodEnd'
+    | 'total'
+    | 'currency'
+    | 'hostedInvoiceUrl'
+    | 'invoicePdf'
+    | 'billingReason'
+  >
+> & { id: string; status: InvoiceStatus | null; upcoming: boolean }
 
 export type SubscriptionSummary = {
   /** The owner's live subscription to the team's plan; null when not subscribed. */

@@ -16,7 +16,7 @@ export default async function handler(
   }
 }
 
-/** Step 7 of the guide: the owner's token balance and its records. */
+/** The owner's token balance and its records. */
 async function GET(
   req: NextApiRequest,
   res: NextApiResponse<TokenBalance | ApiErrorResponse>

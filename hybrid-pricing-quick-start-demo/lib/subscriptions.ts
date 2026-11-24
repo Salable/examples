@@ -37,6 +37,7 @@ export async function getSubscriptionSummary(
         cancelAtPeriodEnd: live.cancelAtPeriodEnd ?? null,
         cancelledAt: live.cancelledAt ?? null,
         isPerpetual: live.isPerpetual ?? null,
+        ownerId: live.ownerId ?? null,
         groupId: plan?.groupId ?? null,
       }
     : null

@@ -10,6 +10,7 @@ A simple demo of pay-as-you-go overage with Salable. A monthly plan grants an al
 - **Viewing the token balance.** The remaining balance and the records behind it, with their expiry.
 - **Viewing overage usage.** The count on the current period's usage record, the estimated overage charge and the history of records with their status.
 - **Managing the subscription.** Turn auto-renew off and on, or cancel immediately. See the feature be locked upon cancellation and the usage record finalised.
+- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details. View and download every invoice for the subscription inside the demo as well.
 
 > NOTE: The [owner](https://salable.app/docs/core-concepts#owner) is hardcoded as `company_acme` and the [grantee](https://salable.app/docs/core-concepts#grantee) as `user_alice`, matching the quick start demos. The [token](https://salable.app/docs/core-concepts#token) and [meter](https://salable.app/docs/core-concepts#meter-slug) share the slug `image_generations`. There is no [entitlement](https://salable.app/docs/understanding-entitlements) of that name; the entitlement check returns the token and meter themselves.
 
@@ -82,9 +83,11 @@ A simple demo of pay-as-you-go overage with Salable. A monthly plan grants an al
 
 6. **Manage the subscription.** In the Pro panel press _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore.
 
-7. **Cancel Pro.** Press _Cancel subscription_ in the Pro panel and confirm. Once Stripe confirms, the token and meter drop out of the entitlement check, Generate images is locked again and the usage record changes from `current` to `final` with a Finalised date. Any tokens left in the balance stay until they expire.
+7. **Check billing.** The Invoices panel lists the invoice Stripe raised at checkout, with _View_ and _PDF_ links, and while auto-renew is on previews the next one, where any recorded overage will be charged. Press _Manage billing_ to open Stripe's billing portal for the owner, where the card and customer details can be managed.
 
-8. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plan.
+8. **Cancel Pro.** Press _Cancel subscription_ and confirm. Once Stripe confirms, the token and meter drop out of the entitlement check, Generate images is locked again and the usage record changes from `current` to `final` with a Finalised date. Any tokens left in the balance stay until they expire.
+
+9. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plan.
 
 ## Troubleshooting
 

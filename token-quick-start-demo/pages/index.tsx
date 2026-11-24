@@ -10,6 +10,7 @@ import { Button } from '@/components/Button'
 import { CheckoutForm } from '@/components/CheckoutForm'
 import { ConsumeForm } from '@/components/ConsumeForm'
 import { FormMessages } from '@/components/FormMessages'
+import { InvoicesPanel } from '@/components/InvoicesPanel'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
 import { ResourceTooltip } from '@/components/ResourceTooltip'
@@ -29,6 +30,7 @@ import { getTokenBalance } from '@/lib/tokens'
 import type {
   ApiErrorResponse,
   Entitlement,
+  Invoice,
   SubscriptionSummary,
   TokenBalance,
 } from '@/lib/types'
@@ -116,6 +118,13 @@ export default function Home({
       ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
     }
   )
+  // Invoices only exist once the owner holds the Starter subscription, so the key
+  // is null until then and SWR skips the request.
+  const invoices = useSWR<{ data: Invoice[] }>(
+    subscription.data?.starter ? '/api/subscription/invoices' : null,
+    fetcher,
+    { ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }) }
+  )
   const tokens = useSWR<TokenBalance>('/api/tokens/balance', fetcher, {
     fallbackData: initialTokens ?? undefined,
     ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
@@ -124,6 +133,7 @@ export default function Home({
   function refresh() {
     void entitlements.mutate()
     void subscription.mutate()
+    void invoices.mutate()
     void tokens.mutate()
   }
 
@@ -142,7 +152,7 @@ export default function Home({
   }
 
   const starter = subscription.data?.starter ?? null
-  // Step 6 of the guide: the owner-scoped check returns the image_tokens slug
+  // The owner-scoped check returns the image_tokens slug
   // with type 'token' while either plan's subscription is active. Check both
   // type and value, because a meter can share a token's slug. Only Starter
   // grants the export_hd entitlement.
@@ -159,6 +169,7 @@ export default function Home({
   const isValidating =
     entitlements.isValidating ||
     subscription.isValidating ||
+    invoices.isValidating ||
     tokens.isValidating
   const error = entitlements.error ?? subscription.error ?? tokens.error
   const errorMessage =
@@ -195,7 +206,7 @@ export default function Home({
                 </h1>
               </div>
               <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Token-based billing demo. Every panel maps to a step in the{' '}
+                Token-based billing demo. Built by following the{' '}
                 <a
                   className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
                   href="https://salable.app/docs/token-quick-start?lang=sdk"
@@ -292,179 +303,172 @@ export default function Home({
 
         {entitlements.data && subscription.data && tokens.data ? (
           <>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-6">
-                {/* Steps 5 and 6: the owner-scoped entitlement check gates the consume form. */}
-                <Panel
-                  title="Consume tokens"
-                  description={
-                    <>
-                      Gated by the{' '}
-                      <code className="font-mono text-xs">{TOKEN_SLUG}</code>{' '}
-                      token for{' '}
-                      <code className="font-mono text-xs">{GRANTEE}</code>,
-                      returned by an owner-scoped entitlement check. Both plans
-                      grant it through a subscription (Starter&apos;s recurring
-                      one, the top-up&apos;s perpetual one), so no separate
-                      entitlement is needed.
-                    </>
-                  }
-                  badge={
-                    canGenerate ? (
-                      <Badge tone="green">Access granted</Badge>
-                    ) : (
-                      <Badge tone="red">No access</Badge>
-                    )
-                  }
-                >
-                  {canGenerate ? (
-                    <ConsumeForm
-                      balance={tokens.data.balance}
-                      onChange={refresh}
-                    />
+            <div className="grid gap-6 md:grid-flow-col md:grid-cols-2 md:grid-rows-2">
+              {/* The owner-scoped entitlement check gates the consume form. */}
+              <Panel
+                title="Consume tokens"
+                description={
+                  <>
+                    Gated by the{' '}
+                    <code className="font-mono text-xs">{TOKEN_SLUG}</code>{' '}
+                    token for{' '}
+                    <code className="font-mono text-xs">{GRANTEE}</code>,
+                    returned by an owner-scoped entitlement check. Both plans
+                    grant it through a subscription (Starter&apos;s recurring
+                    one, the top-up&apos;s perpetual one), so no separate
+                    entitlement is needed.
+                  </>
+                }
+                badge={
+                  canGenerate ? (
+                    <Badge tone="green">Access granted</Badge>
                   ) : (
-                    <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
-                      <p>
-                        <span className="font-mono text-xs">{GRANTEE}</span>{' '}
-                        does not have access to the{' '}
-                        <span className="font-mono text-xs">{TOKEN_SLUG}</span>{' '}
-                        token, so the generation UI stays hidden.
-                      </p>
-                      <p className="mt-2">
-                        Subscribe to Starter or buy a Token Top-Up to unlock it.
-                      </p>
-                    </div>
-                  )}
-                </Panel>
-
-                {/* A second gate on an entitlement only the recurring plan grants. The export is simulated. */}
-                <Panel
-                  title="Export HD"
-                  description={
-                    <>
-                      Gated by the{' '}
-                      <code className="font-mono text-xs">
-                        {EXPORT_HD_ENTITLEMENT}
-                      </code>{' '}
-                      entitlement, which only the Starter plan grants. The
-                      export itself is simulated.
-                    </>
-                  }
-                  badge={
-                    canExportHd ? (
-                      <Badge tone="green">Access granted</Badge>
-                    ) : (
-                      <Badge tone="red">Requires Starter</Badge>
-                    )
-                  }
-                >
-                  {canExportHd ? (
-                    <div className="space-y-3">
-                      <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                        Pretend an image has been generated and export it at
-                        full resolution.
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={handleExportHd}
-                        pending={exportHd === 'exporting'}
-                        pendingLabel="Exporting…"
-                      >
-                        Export image in HD
-                      </Button>
-                      <FormMessages
-                        message={
-                          exportHd === 'done'
-                            ? 'Exported image.png at 3840×2160. Nothing was sent to Salable; only the entitlement check was real.'
-                            : null
-                        }
-                      />
-                    </div>
-                  ) : (
-                    <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
-                      <p>
-                        <span className="font-mono text-xs">{GRANTEE}</span>{' '}
-                        does not have the{' '}
-                        <span className="font-mono text-xs">
-                          {EXPORT_HD_ENTITLEMENT}
-                        </span>{' '}
-                        entitlement. Token Top-Ups do not include it.
-                      </p>
-                      <p className="mt-2">
-                        Subscribe to the Starter plan to unlock HD export.
-                      </p>
-                    </div>
-                  )}
-                </Panel>
-              </div>
-
-              <div className="space-y-6">
-                {/* Step 4: checkout for the Starter plan, or manage it once it exists. */}
-                {starter ? (
-                  <Panel
-                    title="Manage subscription"
-                    description="Starter plan for the owner."
-                    badge={
-                      starter.cancelAtPeriodEnd ? (
-                        <Badge tone="amber">Cancels at period end</Badge>
-                      ) : (
-                        <Badge
-                          tone={
-                            starter.status === 'active'
-                              ? 'green'
-                              : starter.status === 'past_due'
-                                ? 'amber'
-                                : 'zinc'
-                          }
-                        >
-                          {starter.status?.replace('_', ' ') ?? 'unknown'}
-                        </Badge>
-                      )
-                    }
-                  >
-                    <ManageSubscription
-                      subscription={starter}
-                      onChange={refresh}
-                      onCancelled={() => setIsPolling(true)}
-                    />
-                  </Panel>
+                    <Badge tone="red">No access</Badge>
+                  )
+                }
+              >
+                {canGenerate ? (
+                  <ConsumeForm
+                    balance={tokens.data.balance}
+                    onChange={refresh}
+                  />
                 ) : (
-                  <Panel
-                    title="Subscribe to Starter"
-                    description="$29 / month. Grants 1,000 image_tokens each cycle plus the export_hd entitlement. The only plan that unlocks Export HD."
-                    badge={<Badge tone="zinc">Not subscribed</Badge>}
-                  >
-                    <div className="space-y-3">
-                      <CheckoutForm
-                        plan="starter"
-                        label="Subscribe to Starter"
-                      />
-                      <p className="text-xs text-zinc-500">
-                        Use Stripe test card 4242 4242 4242 4242 with any future
-                        expiry.
-                      </p>
-                    </div>
-                  </Panel>
+                  <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
+                    <p>
+                      <span className="font-mono text-xs">{GRANTEE}</span> does
+                      not have access to the{' '}
+                      <span className="font-mono text-xs">{TOKEN_SLUG}</span>{' '}
+                      token, so the generation UI stays hidden.
+                    </p>
+                    <p className="mt-2">
+                      Subscribe to Starter or buy a Token Top-Up to unlock it.
+                    </p>
+                  </div>
                 )}
+              </Panel>
 
-                {/* Step 4 again, one-off variant. The plan is configured with a perpetual subscription, so it works without Starter. */}
+              {/* A second gate on an entitlement only the recurring plan grants. The export is simulated. */}
+              <Panel
+                title="Export HD"
+                description={
+                  <>
+                    Gated by the{' '}
+                    <code className="font-mono text-xs">
+                      {EXPORT_HD_ENTITLEMENT}
+                    </code>{' '}
+                    entitlement, which only the Starter plan grants. The export
+                    itself is simulated.
+                  </>
+                }
+                badge={
+                  canExportHd ? (
+                    <Badge tone="green">Access granted</Badge>
+                  ) : (
+                    <Badge tone="red">Requires Starter</Badge>
+                  )
+                }
+              >
+                {canExportHd ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      Pretend an image has been generated and export it at full
+                      resolution.
+                    </p>
+                    <Button
+                      type="button"
+                      onClick={handleExportHd}
+                      pending={exportHd === 'exporting'}
+                      pendingLabel="Exporting…"
+                    >
+                      Export image in HD
+                    </Button>
+                    <FormMessages
+                      message={
+                        exportHd === 'done'
+                          ? 'Exported image.png at 3840×2160. Nothing was sent to Salable; only the entitlement check was real.'
+                          : null
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
+                    <p>
+                      <span className="font-mono text-xs">{GRANTEE}</span> does
+                      not have the{' '}
+                      <span className="font-mono text-xs">
+                        {EXPORT_HD_ENTITLEMENT}
+                      </span>{' '}
+                      entitlement. Token Top-Ups do not include it.
+                    </p>
+                    <p className="mt-2">
+                      Subscribe to the Starter plan to unlock HD export.
+                    </p>
+                  </div>
+                )}
+              </Panel>
+
+              {/* Checkout for the Starter plan, or manage it once it exists. */}
+              {starter ? (
                 <Panel
-                  title="Token Top-Up"
-                  description="$29 one-off. Adds 1,000 image_tokens with no expiry. This plan is configured with a perpetual subscription, so image_tokens stays in the entitlement check and consuming works without Starter."
-                  badge={<Badge tone="zinc">One-off</Badge>}
+                  title="Manage subscription"
+                  description="Starter plan for the owner."
+                  badge={
+                    starter.cancelAtPeriodEnd ? (
+                      <Badge tone="amber">Cancels at period end</Badge>
+                    ) : (
+                      <Badge
+                        tone={
+                          starter.status === 'active'
+                            ? 'green'
+                            : starter.status === 'past_due'
+                              ? 'amber'
+                              : 'zinc'
+                        }
+                      >
+                        {starter.status?.replace('_', ' ') ?? 'unknown'}
+                      </Badge>
+                    )
+                  }
+                >
+                  <ManageSubscription
+                    subscription={starter}
+                    onChange={refresh}
+                    onCancelled={() => setIsPolling(true)}
+                  />
+                </Panel>
+              ) : (
+                <Panel
+                  title="Subscribe to Starter"
+                  description="$29 / month. Grants 1,000 image_tokens each cycle plus the export_hd entitlement. The only plan that unlocks Export HD."
+                  badge={<Badge tone="zinc">Not subscribed</Badge>}
                 >
                   <div className="space-y-3">
-                    <CheckoutForm plan="topup" label="Buy 1,000 tokens" />
+                    <CheckoutForm plan="starter" label="Subscribe to Starter" />
                     <p className="text-xs text-zinc-500">
                       Use Stripe test card 4242 4242 4242 4242 with any future
                       expiry.
                     </p>
                   </div>
                 </Panel>
-              </div>
+              )}
+
+              {/* One-off variant. The plan is configured with a perpetual subscription, so it works without Starter. */}
+              <Panel
+                title="Token Top-Up"
+                description="$29 one-off. Adds 1,000 image_tokens with no expiry. This plan is configured with a perpetual subscription, so image_tokens stays in the entitlement check and consuming works without Starter."
+                badge={<Badge tone="zinc">One-off</Badge>}
+              >
+                <div className="space-y-3">
+                  <CheckoutForm plan="topup" label="Buy 1,000 tokens" />
+                  <p className="text-xs text-zinc-500">
+                    Use Stripe test card 4242 4242 4242 4242 with any future
+                    expiry.
+                  </p>
+                </div>
+              </Panel>
             </div>
 
-            {/* Step 7: the owner's token balance and every record behind it. */}
+            {/* The owner's token balance and every record behind it. */}
             <Panel
               title="Token balance"
               description={
@@ -548,6 +552,15 @@ export default function Home({
                 </div>
               )}
             </Panel>
+
+            {/* The invoices behind the Starter subscription, with Stripe's hosted and PDF links. */}
+            {subscription.data.starter ? (
+              <InvoicesPanel
+                invoices={invoices.data?.data}
+                error={invoices.error}
+                isLoading={invoices.isLoading}
+              />
+            ) : null}
 
             {/* Reset: test-mode-only deletes that cascade to the token records. */}
             <footer className="rounded-xl border border-dashed border-black/15 p-5 dark:border-white/20">

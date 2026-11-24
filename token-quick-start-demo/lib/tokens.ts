@@ -3,7 +3,7 @@ import { getSalable, isSalableError } from './salable'
 import type { TokenBalance } from './types'
 
 /**
- * Step 7 of the guide: the owner's balance for one token slug, with the
+ * The owner's balance for one token slug, with the
  * records behind it. `undefined` fields become `null` so the result can be
  * passed through `getServerSideProps`.
  */

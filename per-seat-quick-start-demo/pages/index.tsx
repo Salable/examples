@@ -10,6 +10,7 @@ import { Button } from '@/components/Button'
 import { CheckoutForm } from '@/components/CheckoutForm'
 import { ViewerSwitcher, TeamSwitcher } from '@/components/ContextSwitcher'
 import { FormMessages } from '@/components/FormMessages'
+import { InvoicesPanel } from '@/components/InvoicesPanel'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
 import { ResourceTooltip } from '@/components/ResourceTooltip'
@@ -44,6 +45,7 @@ import { getSubscriptionSummary } from '@/lib/subscriptions'
 import type {
   ApiErrorResponse,
   Entitlement,
+  Invoice,
   GroupSummary,
   Subscription,
   SubscriptionSummary,
@@ -187,10 +189,19 @@ export default function Home({
     }
   )
 
+  // Invoices only exist once the workspace holds a live subscription the user
+  // may see, so the key is null until then and SWR skips the request.
+  const invoices = useSWR<{ data: Invoice[] }>(
+    subscription.data?.subscription ? `/api/subscription/invoices?${qs}` : null,
+    fetcher,
+    { ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }) }
+  )
+
   function refresh() {
     void entitlements.mutate()
     void subscription.mutate()
     void group.mutate()
+    void invoices.mutate()
   }
 
   // Reset demo: deletes everything the demo created for every owner.
@@ -201,7 +212,7 @@ export default function Home({
     onSuccess: refresh,
   })
 
-  // Step 3 of the guide: the owner-scoped check returns the entitlements the
+  // The owner-scoped check returns the entitlements the
   // team's live subscription grants this user. Export PDF is on both plans; the
   // AI assistant is only on Team.
   const canExportPdf =
@@ -219,7 +230,10 @@ export default function Home({
     (ctx.team === 'personal' || group.data)
   )
   const isValidating =
-    entitlements.isValidating || subscription.isValidating || group.isValidating
+    entitlements.isValidating ||
+    subscription.isValidating ||
+    group.isValidating ||
+    invoices.isValidating
   const error = entitlements.error ?? subscription.error ?? group.error
   const errorMessage =
     error instanceof Error ? error.message : loaded ? null : initialError
@@ -284,7 +298,7 @@ export default function Home({
               </h1>
             </div>
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-              Per-seat billing demo. Every panel maps to a step in the{' '}
+              Per-seat billing demo. Built by following the{' '}
               <a
                 className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
                 href="https://salable.app/docs/per-seat-quick-start?lang=sdk"
@@ -383,102 +397,105 @@ export default function Home({
 
         {loaded && subscription.data ? (
           <>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-6">
-                {/* Step 3: two features gated on entitlements. The check is owner-scoped, so each team answers for its own owner. */}
-                <SimulatedFeature
-                  key={`export-${qs}`}
-                  title="Export PDF"
+            <div className="grid gap-6 md:grid-flow-col md:grid-cols-2 md:grid-rows-2">
+              {/* Two features gated on entitlements. The check is owner-scoped, so each team answers for its own owner. */}
+              <SimulatedFeature
+                key={`export-${qs}`}
+                title="Export PDF"
+                description={
+                  <>
+                    Gated by the{' '}
+                    <code className="font-mono text-xs">
+                      {EXPORT_PDF_ENTITLEMENT}
+                    </code>{' '}
+                    entitlement, which both plans grant. The check is for the
+                    grantee{' '}
+                    <code className="font-mono text-xs">{ctx.granteeId}</code>{' '}
+                    scoped to the owner{' '}
+                    <code className="font-mono text-xs">{owner}</code>.
+                  </>
+                }
+                entitlement={EXPORT_PDF_ENTITLEMENT}
+                enabled={canExportPdf}
+                requires={
+                  ctx.team === 'acme' ? 'Requires Team' : 'Requires Personal'
+                }
+                lockedHint={lockedHint({ ...locked, teamOnly: false })}
+                buttonLabel="Export notes as PDF"
+                pendingLabel="Exporting…"
+                doneMessage="Exported notes.pdf with 3 pages."
+              />
+
+              <SimulatedFeature
+                key={`ai-${qs}`}
+                title="AI assistant"
+                description={
+                  <>
+                    Gated by the{' '}
+                    <code className="font-mono text-xs">
+                      {AI_ASSISTANT_ENTITLEMENT}
+                    </code>{' '}
+                    entitlement, which only the Team plan grants. The same user
+                    is locked out here in their Personal workspace and let in on{' '}
+                    {TEAM_NAME}, from one entitlement check with a different
+                    owner.
+                  </>
+                }
+                entitlement={AI_ASSISTANT_ENTITLEMENT}
+                enabled={canUseAi}
+                requires="Requires Team"
+                lockedHint={lockedHint({ ...locked, teamOnly: true })}
+                buttonLabel="Summarise my notes"
+                pendingLabel="Thinking…"
+                doneMessage="Summarised 3 notes into 5 bullet points."
+              />
+
+              {memberOnly ? (
+                // Being in the group is what authorises a user to see and
+                // manage the team's subscription, so an outsider gets no
+                // details at all, only how to get in.
+                <Panel
+                  title={TEAM_NAME}
                   description={
                     <>
-                      Gated by the{' '}
-                      <code className="font-mono text-xs">
-                        {EXPORT_PDF_ENTITLEMENT}
-                      </code>{' '}
-                      entitlement, which both plans grant. The check is for the
-                      grantee{' '}
-                      <code className="font-mono text-xs">{ctx.granteeId}</code>{' '}
-                      scoped to the owner{' '}
-                      <code className="font-mono text-xs">{owner}</code>.
+                      The team&apos;s subscription and members are only shown to
+                      members of its group. The server withheld them for{' '}
+                      <code className="font-mono text-xs">{ctx.granteeId}</code>
+                      .
                     </>
                   }
-                  entitlement={EXPORT_PDF_ENTITLEMENT}
-                  enabled={canExportPdf}
-                  requires={
-                    ctx.team === 'acme' ? 'Requires Team' : 'Requires Personal'
-                  }
-                  lockedHint={lockedHint({ ...locked, teamOnly: false })}
-                  buttonLabel="Export notes as PDF"
-                  pendingLabel="Exporting…"
-                  doneMessage="Exported notes.pdf with 3 pages."
+                  badge={<Badge tone="red">Not a member</Badge>}
+                >
+                  <p className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
+                    Switch to a member of {TEAM_NAME} and add{' '}
+                    {USERS[ctx.granteeId].name} from their members panel, then
+                    come back here. No checkout is needed.
+                  </p>
+                </Panel>
+              ) : (
+                // Checkout for the team's plan, or manage it once it
+                // exists.
+                <PlanPanel
+                  team={ctx.team}
+                  granteeId={ctx.granteeId}
+                  owner={owner}
+                  subscription={liveSubscription}
+                  onChange={refresh}
+                  onCancelled={() => setIsPolling(true)}
                 />
-
-                <SimulatedFeature
-                  key={`ai-${qs}`}
-                  title="AI assistant"
-                  description={
-                    <>
-                      Gated by the{' '}
-                      <code className="font-mono text-xs">
-                        {AI_ASSISTANT_ENTITLEMENT}
-                      </code>{' '}
-                      entitlement, which only the Team plan grants. The same
-                      user is locked out here in their Personal workspace and
-                      let in on {TEAM_NAME}, from one entitlement check with a
-                      different owner.
-                    </>
-                  }
-                  entitlement={AI_ASSISTANT_ENTITLEMENT}
-                  enabled={canUseAi}
-                  requires="Requires Team"
-                  lockedHint={lockedHint({ ...locked, teamOnly: true })}
-                  buttonLabel="Summarise my notes"
-                  pendingLabel="Thinking…"
-                  doneMessage="Summarised 3 notes into 5 bullet points."
-                />
-              </div>
-
-              <div className="space-y-6">
-                {memberOnly ? (
-                  // Being in the group is what authorises a user to see and
-                  // manage the team's subscription, so an outsider gets no
-                  // details at all, only how to get in.
-                  <Panel
-                    title={TEAM_NAME}
-                    description={
-                      <>
-                        The team&apos;s subscription and members are only shown
-                        to members of its group. The server withheld them for{' '}
-                        <code className="font-mono text-xs">
-                          {ctx.granteeId}
-                        </code>
-                        .
-                      </>
-                    }
-                    badge={<Badge tone="red">Not a member</Badge>}
-                  >
-                    <p className="rounded-md border border-dashed border-black/15 p-4 text-sm text-zinc-600 dark:border-white/20 dark:text-zinc-400">
-                      Switch to a member of {TEAM_NAME} and add{' '}
-                      {USERS[ctx.granteeId].name} from their members panel, then
-                      come back here. No checkout is needed.
-                    </p>
-                  </Panel>
-                ) : (
-                  // Step 2: checkout for the team's plan, or manage it once it
-                  // exists.
-                  <PlanPanel
-                    team={ctx.team}
-                    granteeId={ctx.granteeId}
-                    owner={owner}
-                    subscription={liveSubscription}
-                    onChange={refresh}
-                    onCancelled={() => setIsPolling(true)}
-                  />
-                )}
-              </div>
+              )}
             </div>
 
-            {/* Step 4: the group behind the Team subscription, and who is in it. Members only. */}
+            {/* The invoices behind the live subscription, with Stripe's hosted and PDF links. Members only. */}
+            {liveSubscription ? (
+              <InvoicesPanel
+                invoices={invoices.data?.data}
+                error={invoices.error}
+                isLoading={invoices.isLoading}
+              />
+            ) : null}
+
+            {/* The group behind the Team subscription, and who is in it. Members only. */}
             {ctx.team === 'acme' && !memberOnly ? (
               <Panel
                 title={`${TEAM_NAME} members`}
@@ -610,7 +627,7 @@ function lockedHint({
 }
 
 /**
- * Step 2: a Subscribe panel until the team's owner holds a live subscription
+ * A Subscribe panel until the team's owner holds a live subscription
  * to the team's plan, then a Manage panel for that subscription.
  */
 function PlanPanel({
@@ -661,6 +678,8 @@ function PlanPanel({
         <ManageSubscription
           subscription={subscription}
           planName={name}
+          granteeId={granteeId}
+          team={team}
           onChange={onChange}
           onCancelled={onCancelled}
         />

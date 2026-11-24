@@ -12,7 +12,7 @@ type Props = {
 }
 
 /**
- * Step 3: generate a Stripe Checkout link for the team's plan, bought by the
+ * Generate a Stripe Checkout link for the team's plan, bought by the
  * current user, and redirect to it.
  */
 export function CheckoutForm({ label, granteeId, team }: Props) {

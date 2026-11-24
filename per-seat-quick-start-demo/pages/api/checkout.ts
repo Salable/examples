@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { z } from 'zod'
 import { TEAM_SEATS, TEAM_SEATS_SLUG, getPlanIds } from '@/lib/constants'
-import { contextSearchParams, resolveContext } from '@/lib/context'
+import { contextPageParams, resolveContext } from '@/lib/context'
 import { getSalable, isSalableError } from '@/lib/salable'
 import { checkoutSchema } from '@/lib/schemas'
 import type { ApiErrorResponse } from '@/lib/types'
@@ -35,10 +35,10 @@ async function POST(
   const appUrl = 'http://localhost:3000'
   // Send Stripe back to the same user and team so the page polls the right
   // context for the new subscription.
-  const returnTo = contextSearchParams(ctx)
+  const returnTo = contextPageParams(ctx)
 
   try {
-    // Step 2 of the guide: generate a Stripe Checkout link for the team's plan.
+    // Generate a Stripe Checkout link for the team's plan.
     // `grantee` is the user's ID rather than a group ID, so Salable creates a
     // new group for the owner containing them. In the Team ACME workspace the
     // group is owned by team_acme, and `metadata` buys 2 seats up front so a

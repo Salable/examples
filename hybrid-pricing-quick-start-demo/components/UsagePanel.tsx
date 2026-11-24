@@ -24,7 +24,7 @@ const usd = new Intl.NumberFormat('en-US', {
 })
 
 /**
- * Step 6 of the guide: the owner's pdf_exports usage this period and every
+ * The owner's pdf_exports usage this period and every
  * record behind it. Usage is per owner, so the Personal and Team workspaces
  * show separate records for the same meter, each billed at its own plan's
  * rate.

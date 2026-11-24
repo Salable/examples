@@ -11,7 +11,7 @@ type Props = {
 }
 
 /**
- * Step 5: the consume form. Its own component because it owns a form hook and
+ * The consume form. Its own component because it owns a form hook and
  * is only rendered once the entitlement check passes.
  */
 export function ConsumeForm({ balance, onChange }: Props) {

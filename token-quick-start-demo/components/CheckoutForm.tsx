@@ -10,7 +10,7 @@ type Props = {
   label: string
 }
 
-/** Step 4: generate a Stripe Checkout link for a plan and redirect to it. */
+/** Generate a Stripe Checkout link for a plan and redirect to it. */
 export function CheckoutForm({ plan, label }: Props) {
   const { form, fields, pending } = useApiForm<
     typeof checkoutSchema,

@@ -13,6 +13,9 @@ export const contextSchema = z.object({
 /** Checkout buys the team's plan for the user, so it needs nothing more. */
 export const checkoutSchema = contextSchema
 
+/** The billing portal is opened for the owner the user and team resolve to. */
+export const portalSchema = contextSchema
+
 /** Export PDF: how many exports to record against the team's meter. */
 export const recordUsageSchema = contextSchema.extend({
   increment: z

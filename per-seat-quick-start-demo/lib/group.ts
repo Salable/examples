@@ -1,10 +1,16 @@
 import { TEAM_OWNER } from './constants'
 import { getSalable, isSalableError } from './salable'
 import { getSubscriptionSummary } from './subscriptions'
-import type { Subscription, TeamSummary, TeamView } from './types'
+import type { DemoContext } from './context'
+import type {
+  Subscription,
+  SubscriptionSummary,
+  TeamSummary,
+  TeamView,
+} from './types'
 
 /**
- * Step 4 of the guide: the Team ACME workspace as one user sees it. Being in
+ * The Team ACME workspace as one user sees it. Being in
  * the group is what authorises a user to see and manage the team's
  * subscription, so a user outside the group gets neither the subscription nor
  * the member list, only `memberOnly: true`. Without a live Team subscription
@@ -24,6 +30,20 @@ export async function getTeamView(granteeId: string): Promise<TeamView> {
     subscription: { subscription, memberOnly: false },
     group: { team, memberOnly: false },
   }
+}
+
+/**
+ * The subscription as the context's user may see it: through the team view in
+ * Team ACME, where a non-member gets `memberOnly` instead, and straight from
+ * the owner in a Personal workspace.
+ */
+export async function getContextSubscription(
+  ctx: DemoContext
+): Promise<SubscriptionSummary> {
+  if (ctx.team === 'acme') {
+    return (await getTeamView(ctx.granteeId)).subscription
+  }
+  return getSubscriptionSummary(ctx.owner, ctx.team)
 }
 
 export function isTeamMember(team: TeamSummary, granteeId: string): boolean {

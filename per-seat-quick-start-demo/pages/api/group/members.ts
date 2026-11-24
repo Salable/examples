@@ -21,7 +21,7 @@ export default async function handler(
 }
 
 /**
- * Step 4 of the guide: add a user to the team's group, or remove one. Adding
+ * Add a user to the team's group, or remove one. Adding
  * grants them every entitlement on the Team plan straight away with no
  * checkout; removing takes it away again. Only a member of the group may
  * change it, and the group is resolved from the live Team subscription, so

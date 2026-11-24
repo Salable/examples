@@ -23,6 +23,7 @@ export async function getSubscriptionSummary(): Promise<SubscriptionSummary> {
         cancelAtPeriodEnd: live.cancelAtPeriodEnd ?? null,
         cancelledAt: live.cancelledAt ?? null,
         isPerpetual: live.isPerpetual ?? null,
+        ownerId: live.ownerId ?? null,
       }
     : null
 

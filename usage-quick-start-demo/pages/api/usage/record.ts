@@ -35,7 +35,7 @@ async function POST(
   const { increment } = parsed.data
 
   try {
-    // Step 4: the owner-scoped check returns the meter slug with type
+    // The owner-scoped check returns the meter slug with type
     // 'meter'. Check both, because a token can share the same slug.
     const entitlements = await getEntitlements(GRANTEE)
     const canGenerateImages = entitlements.some(
@@ -49,7 +49,7 @@ async function POST(
 
     // Pretend the images were generated here, then record the usage.
 
-    // Step 3: Record usage. Salable answers 204 straight away and increments
+    // Record usage. Salable answers 204 straight away and increments
     // the usage record in the background. The Idempotency-Key means a retried
     // request cannot count the same generation twice.
     await getSalable().api.usage.record.post(

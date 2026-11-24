@@ -10,6 +10,7 @@ import { Button } from '@/components/Button'
 import { CheckoutForm } from '@/components/CheckoutForm'
 import { ConsumeForm } from '@/components/ConsumeForm'
 import { FormMessages } from '@/components/FormMessages'
+import { InvoicesPanel } from '@/components/InvoicesPanel'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
 import { ResourceTooltip } from '@/components/ResourceTooltip'
@@ -33,6 +34,7 @@ import { getUsage } from '@/lib/usage'
 import type {
   ApiErrorResponse,
   Entitlement,
+  Invoice,
   Subscription,
   SubscriptionSummary,
   TokenBalance,
@@ -62,6 +64,7 @@ const STATUS_TONES: Record<UsageRecordStatus, BadgeTone> = {
   current: 'green',
   final: 'zinc',
   recorded: 'amber',
+  overage: 'amber',
 }
 
 const usd = new Intl.NumberFormat('en-US', {
@@ -141,6 +144,13 @@ export default function Home({
       ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
     }
   )
+  // Invoices only exist once the owner holds the Pro subscription, so the key
+  // is null until then and SWR skips the request.
+  const invoices = useSWR<{ data: Invoice[] }>(
+    subscription.data?.pro ? '/api/subscription/invoices' : null,
+    fetcher,
+    { ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }) }
+  )
   const tokens = useSWR<TokenBalance>('/api/tokens/balance', fetcher, {
     fallbackData: initialTokens ?? undefined,
     ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
@@ -154,6 +164,7 @@ export default function Home({
     await Promise.all([
       entitlements.mutate(),
       subscription.mutate(),
+      invoices.mutate(),
       tokens.mutate(),
       usage.mutate(),
     ])
@@ -203,6 +214,7 @@ export default function Home({
   const isValidating =
     entitlements.isValidating ||
     subscription.isValidating ||
+    invoices.isValidating ||
     tokens.isValidating ||
     usage.isValidating
   const error =
@@ -603,6 +615,15 @@ export default function Home({
                 </div>
               )}
             </Panel>
+
+            {/* The invoices behind the Pro subscription, with Stripe's hosted and PDF links. */}
+            {subscription.data.pro ? (
+              <InvoicesPanel
+                invoices={invoices.data?.data}
+                error={invoices.error}
+                isLoading={invoices.isLoading}
+              />
+            ) : null}
 
             {/* Reset: test-mode-only deletes that cascade to the token and usage records. */}
             <footer className="rounded-xl border border-dashed border-black/15 p-5 dark:border-white/20">

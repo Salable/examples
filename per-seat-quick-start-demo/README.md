@@ -10,6 +10,7 @@ A simple demo following the [Salable Per-Seat Billing Quick Start](https://salab
 - **Feature gating.** Two simulated features, _Export PDF_ and _AI assistant_, are locked until an owner-scoped [entitlement check](https://salable.app/docs/check-entitlements) for the current user and workspace returns their entitlement. The same user is locked out of the AI assistant in their Personal workspace and let in on Team ACME.
 - **Adding and removing members.** Once the Team subscription is purchased, a member can add the other user to the group. This will grant them access to the Team plan's entitlements immediately with no checkout. Members can also be removed to free the seat and then lose access to the plan's entitlements. Salable rejects an add that would exceed the membership count of the group.
 - **Subscription management.** Turn auto-renew off and on, or cancel immediately, in either workspace. Cancelling Team locks the features for every member of the group at once.
+- **Billing portal and invoices.** Open Stripe's billing portal for the workspace's [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details. View and download every invoice for each subscription inside the demo as well.
 
 > NOTE: To keep the code close to the guide, the grantees are hardcoded as `user_alice` and `user_bob`, the team's owner as `team_acme`, the per-seat line item slug as `team_seats` and the entitlements as `export_pdf` and `ai_assistant`. In the Personal workspace the owner is the user's own ID.
 
@@ -84,9 +85,11 @@ A simple demo following the [Salable Per-Seat Billing Quick Start](https://salab
 
 7. **Manage a subscription.** When viewing as Alice, use the Manage panel to _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore.
 
-8. **Cancel Team.** Press _Cancel subscription_ in the Manage Team panel and confirm. Once Stripe confirms, the entitlements drop out of the check for every member, both features lock in the Team ACME workspace for Alice and Bob alike, and the members panel reports no group. Alice's Personal subscription is unaffected.
+8. **Check billing.** The Invoices panel lists the invoice Stripe raised at checkout for the workspace you are viewing, with _View_ and _PDF_ links, and previews the next one while auto-renew is on. Press _Manage billing_ to open Stripe's billing portal for that owner, where the card and customer details can be managed.
 
-9. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plans.
+9. **Cancel Team.** Press _Cancel subscription_ in the Manage Team panel and confirm. Once Stripe confirms, the entitlements drop out of the check for every member, both features lock in the Team ACME workspace for Alice and Bob alike, and the members panel reports no group. Alice's Personal subscription is unaffected.
+
+10. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plans.
 
 ## Troubleshooting
 

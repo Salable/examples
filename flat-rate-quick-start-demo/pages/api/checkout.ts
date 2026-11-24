@@ -33,9 +33,9 @@ async function POST(
   const appUrl = 'http://localhost:3000'
 
   try {
-    // Step 2: Generate a Stripe Checkout link for the Pro plan, billed
+    // Generate a Stripe Checkout link for the Pro plan, billed
     // monthly at a flat rate. Once the customer completes checkout, Salable
-    // creates the subscription whose entitlements step 3 checks.
+    // creates the subscription whose entitlements the check reads.
     const response = await getSalable().api.checkout.post({
       planId: getProPlanId(),
       owner: OWNER,

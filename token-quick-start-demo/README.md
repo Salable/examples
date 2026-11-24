@@ -11,6 +11,7 @@ A simple demo following the [Salable Token Quick Start](https://salable.app/docs
 - **Handling empty balances.** Attempting to consume more tokens than you hold returns the error "Insufficient token balance".
 - **Viewing the current balance.** The total remaining balance and the breakdown per source including when it expires and if it came from a subscription or a one-off purchase.
 - **Managing the subscription.** Turn auto-renew off and on, or cancel immediately. See the features be automatically locked upon cancellation.
+- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details. View and download every invoice for the subscription inside the demo as well.
 
 > NOTE: To keep the code identical to the guide, the [owner](https://salable.app/docs/core-concepts#owner) is hardcoded as `company_acme`, the [grantee](https://salable.app/docs/core-concepts#grantee) as `user_alice`, the [token](https://salable.app/docs/core-concepts#token) as `image_tokens` and the [entitlement](https://salable.app/docs/understanding-entitlements) as `export_hd`.
 
@@ -84,9 +85,11 @@ A simple demo following the [Salable Token Quick Start](https://salable.app/docs
 
 6. **Consume more tokens.** Enter `50` and press _Consume_. The balance drops and the records' remaining amount updates. Consuming tokens uses the token balances in order of expiration, starting with the soonest, then the furthest expiry before finally using records with no expiry. Once a record is fully consumed, it is no longer returned.
 
-7. **Manage the subscription.** Press _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore. Then press _Cancel subscription_ and confirm. Once cancelled, the `export_hd` entitlement is removed from the grantee and the Export HD feature is locked again. The Consume panel stays unlocked because this demo's top-up plan was configured as perpetual, so its subscription still puts `image_tokens` in the entitlement check. Had the top-up been a plain one-off, consuming would be locked too, even though the tokens already granted remain in the balance until they expire.
+7. **Check billing.** The Invoices panel lists the invoice Stripe raised for the Starter subscription, with _View_ and _PDF_ links, and previews the next one while auto-renew is on. The one-off top-up is a perpetual subscription with no invoices of its own, so it does not appear here. Press _Manage billing_ to open Stripe's billing portal for the owner, where the card and customer details can be managed.
 
-8. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the seeded products and plans.
+8. **Manage the subscription.** Press _Turn off auto-renew_. The badge changes to _Cancels at period end_, the upcoming invoice is removed and the button flips to _Turn on auto-renew_; press it again to restore. Then press _Cancel subscription_ and confirm. Once cancelled, the `export_hd` entitlement is removed from the grantee and the Export HD feature is locked again. The Consume panel stays unlocked because this demo's top-up plan was configured as perpetual, so its subscription still puts `image_tokens` in the entitlement check. 
+
+9. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the seeded products and plans.
 
 ## Troubleshooting
 

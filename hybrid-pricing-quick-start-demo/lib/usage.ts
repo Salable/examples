@@ -10,7 +10,7 @@ const STATUSES = new Set<UsageRecordStatus>([
 ])
 
 /**
- * Step 6 of the guide: an owner's usage records for the pdf_exports meter.
+ * An owner's usage records for the pdf_exports meter.
  * Usage is per owner, so a user's Personal workspace and Team ACME each have
  * their own records even though both plans meter the same slug. The guide
  * only asks for `status: ['current']`; `final` is included too so the demo can

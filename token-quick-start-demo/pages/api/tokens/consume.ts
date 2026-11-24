@@ -35,7 +35,7 @@ async function POST(
   const { amount } = parsed.data
 
   try {
-    // Step 6: the owner-scoped check returns the token slug with
+    // The owner-scoped check returns the token slug with
     // type 'token'. Check both, because a meter can share the same slug.
     const entitlements = await getEntitlements(GRANTEE)
     const hasAccess = entitlements.some(
@@ -47,7 +47,7 @@ async function POST(
       })
     }
 
-    // Step 5: Consume tokens
+    // Consume tokens
     await getSalable().api.tokens.consume.post(
       { token: TOKEN_SLUG, owner: OWNER, amount },
       { headers: { 'Idempotency-Key': randomUUID() } }

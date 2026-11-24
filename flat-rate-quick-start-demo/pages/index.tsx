@@ -9,6 +9,7 @@ import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
 import { CheckoutForm } from '@/components/CheckoutForm'
 import { FormMessages } from '@/components/FormMessages'
+import { InvoicesPanel } from '@/components/InvoicesPanel'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
 import { PlayForm } from '@/components/PlayForm'
@@ -28,6 +29,7 @@ import { getSubscriptionSummary } from '@/lib/subscriptions'
 import type {
   ApiErrorResponse,
   Entitlement,
+  Invoice,
   Subscription,
   SubscriptionSummary,
 } from '@/lib/types'
@@ -110,10 +112,18 @@ export default function Home({
       ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }),
     }
   )
+  // Invoices only exist once the owner holds the Pro subscription, so the key
+  // is null until then and SWR skips the request.
+  const invoices = useSWR<{ data: Invoice[] }>(
+    subscription.data?.pro ? '/api/subscription/invoices' : null,
+    fetcher,
+    { ...(isPolling && { refreshInterval: POLL_INTERVAL_MS }) }
+  )
 
   function refresh() {
     void entitlements.mutate()
     void subscription.mutate()
+    void invoices.mutate()
   }
 
   // Reset demo: deletes every subscription and receipt for the owner.
@@ -124,7 +134,7 @@ export default function Home({
     onSuccess: refresh,
   })
 
-  // Step 3 of the guide: the grantee can listen ad-free while the entitlement
+  // The grantee can listen ad-free while the entitlement
   // check, scoped to the owner, returns the ad_free_listening entitlement.
   // The Pro plan grants it, so it appears once the subscription is active and
   // disappears once the subscription is cancelled.
@@ -134,7 +144,10 @@ export default function Home({
     ) ?? false
 
   const loaded = Boolean(entitlements.data && subscription.data)
-  const isValidating = entitlements.isValidating || subscription.isValidating
+  const isValidating =
+    entitlements.isValidating ||
+    subscription.isValidating ||
+    invoices.isValidating
   const error = entitlements.error ?? subscription.error
   const errorMessage =
     error instanceof Error ? error.message : loaded ? null : initialError
@@ -170,7 +183,7 @@ export default function Home({
                 </h1>
               </div>
               <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                Flat-rate billing demo. Every panel maps to a step in the{' '}
+                Flat-rate billing demo. Built by following the{' '}
                 <a
                   className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
                   href="https://salable.app/docs/flat-rate-quick-start?lang=sdk"
@@ -268,7 +281,7 @@ export default function Home({
         {entitlements.data && subscription.data ? (
           <>
             <div className="grid gap-6 md:grid-cols-2">
-              {/* Step 3: the entitlement check gates the player. The playback is simulated. */}
+              {/* The entitlement check gates the player. The playback is simulated. */}
               <Panel
                 title="Ad-free listening"
                 description={
@@ -309,7 +322,7 @@ export default function Home({
                 )}
               </Panel>
 
-              {/* Step 2: checkout for the Pro plan, or manage it once it exists. */}
+              {/* Checkout for the Pro plan, or manage it once it exists. */}
               <PlanPanel
                 subscription={subscription.data.pro}
                 description={
@@ -327,7 +340,7 @@ export default function Home({
               />
             </div>
 
-            {/* Step 3 again: the raw result of the check that gates the player. */}
+            {/* The raw result of the check that gates the player. */}
             <Panel
               title="Entitlement check"
               description={
@@ -405,6 +418,15 @@ export default function Home({
               )}
             </Panel>
 
+            {/* The invoices behind the Pro subscription, with Stripe's hosted and PDF links. */}
+            {subscription.data.pro ? (
+              <InvoicesPanel
+                invoices={invoices.data?.data}
+                error={invoices.error}
+                isLoading={invoices.isLoading}
+              />
+            ) : null}
+
             {/* Reset: test-mode-only deletes. */}
             <footer className="rounded-xl border border-dashed border-black/15 p-5 dark:border-white/20">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -455,7 +477,7 @@ export default function Home({
 }
 
 /**
- * Step 2: a Subscribe panel until the owner holds a live Pro subscription,
+ * A Subscribe panel until the owner holds a live Pro subscription,
  * then a Manage panel for that subscription.
  */
 function PlanPanel({
