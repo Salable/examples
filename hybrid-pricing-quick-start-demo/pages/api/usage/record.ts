@@ -43,7 +43,7 @@ async function POST(
   const planName = ctx.team === 'acme' ? 'Team' : 'Personal'
 
   try {
-    // Step 5 of the guide: the owner-scoped check returns the meter slug with
+    // The owner-scoped check returns the meter slug with
     // type 'meter'. Check both, because a token can share the same slug. For
     // Team ACME this also covers membership: a user outside the group gets
     // no meter entry for team_acme.
@@ -62,7 +62,7 @@ async function POST(
 
     // Pretend the PDFs were exported here, then record the usage.
 
-    // Step 4 of the guide: record usage for the owner. Salable answers 204
+    // Record usage for the owner. Salable answers 204
     // straight away and increments the usage record in the background. The
     // Idempotency-Key means a retried request cannot count the same exports
     // twice.

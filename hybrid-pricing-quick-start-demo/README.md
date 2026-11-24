@@ -11,9 +11,10 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 - **Automatic entitlements from line items.** Neither _Export PDF_ nor the _AI assistant_ needs an entitlement declared on the plan. An owner-scoped [entitlement check](https://salable.app/docs/check-entitlements) automatically returns the plan's meter and token slugs as entitlements with `type: 'meter'` and `type: 'token'` respectively. So, _Export PDF_ is unlocked wherever the check returns the `pdf_exports` meter and the _AI assistant_ wherever it returns the `ai_credits` token.
 - **Feature gating.** The product declares one [entitlement](https://salable.app/docs/core-concepts#entitlement), `shared_notebooks`, on the _Team_ plan. The same entitlement check as before returns it for members of Team ACME, unlocking the _Shared notebooks_ feature, it remains locked on the _Personal_ plan as it does not grant that entitlement.
 - **Recording usage.** Each export [records usage](https://salable.app/docs/recording-usage) for the workspace's owner with an `Idempotency-Key`. Salable answers immediately and increments the owner's usage asynchronously.
-- **Consuming tokens.** Each summary [consumes tokens](https://salable.app/docs/token-billing#consuming-tokens) immediately for the workspace's owner. If the user has an insufficient balance then the request rejects with  `422 Insufficient token balance` until the balance is sufficient again.
+- **Consuming tokens.** Each summary [consumes tokens](https://salable.app/docs/token-billing#consuming-tokens) immediately for the workspace's owner. If the user has an insufficient balance then the request rejects with `422 Insufficient token balance` until the balance is sufficient again.
 - **Usage and credits shared by the owner.** Everyone in the [group](https://salable.app/docs/grantee-groups) attached to the subscription owned by Team ACME records exports on the same usage record and consumes tokens from the same balance. This allows usage and tokens to be combined with per-seat billing on the same subscription.
 - **Subscription management.** Turn auto-renew off and on, or cancel immediately, in either workspace. Cancelling Team locks the features for every member of the group at once.
+- **Billing portal and invoices.** Open Stripe's billing portal for the [owner](https://salable.app/docs/core-concepts#owner) to manage the card and customer details, and see every invoice behind the subscription with links to the hosted invoice and its PDF.
 
 > NOTE: To keep the code close to the guide, the grantees are hardcoded as `user_alice` and `user_bob`, the team's owner as `team_acme`, the meter as `pdf_exports`, the token as `ai_credits`, the entitlement as `shared_notebooks` and the per-seat line item slug as `hybrid_team_seats`. In the Personal workspace the owner is the user's own ID.
 
@@ -94,9 +95,11 @@ A simple demo following the [Hybrid Pricing Quick Start](https://salable.app/doc
 
 10. **Subscription management.** When viewing as Alice, use the Manage panel to _Turn off auto-renew_. The badge changes to _Cancels at period end_ and the button flips to _Turn on auto-renew_; press it again to restore.
 
-11. **Cancel Team.** Press _Cancel subscription_ in the Manage Team panel and confirm. Once Stripe confirms, the entitlement, meter and token drop out of the check for every member, all three features lock in the Team ACME workspace for all members, the team's usage record changes from `current` to `final` with the count that will be invoiced, and the members panel reports no group. Alice's Personal subscription, access, and usage are unaffected.
+11. **Check billing.** The Invoices panel lists the invoice Stripe raised at checkout for the workspace you are viewing, with _View_ and _PDF_ links, and previews the next one while auto-renew is on. Press _Manage billing_ to open Stripe's billing portal for that owner, where the card and customer details can be managed.
 
-12. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plans; the usage records and token balances go with their owners.
+12. **Cancel Team.** Press _Cancel subscription_ and confirm. Once Stripe confirms, the entitlement, meter and token drop out of the check for every member, all three features lock in the Team ACME workspace for all members, the team's usage record changes from `current` to `final` with the count that will be invoiced, and the members panel reports no group. Alice's Personal subscription, access, and usage are unaffected.
+
+13. **Reset and go again.** Press _Reset demo_ at the bottom and confirm. This removes all of the data created in the demo apart from the imported product and plans; the usage records and token balances go with their owners.
 
 ## Troubleshooting
 

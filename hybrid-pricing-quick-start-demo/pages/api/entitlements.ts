@@ -20,7 +20,7 @@ export default async function handler(
 }
 
 /**
- * Step 5 of the guide: which entitlements the user holds in this team. The
+ * Which entitlements the user holds in this team. The
  * check is scoped to the team's owner, so a user in both their own group and
  * the team's only sees the access that owner's subscriptions grant.
  */

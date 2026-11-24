@@ -12,6 +12,7 @@ import { CheckoutForm } from '@/components/CheckoutForm'
 import { ViewerSwitcher, TeamSwitcher } from '@/components/ContextSwitcher'
 import { ExportPdfFeature } from '@/components/ExportPdfFeature'
 import { FormMessages } from '@/components/FormMessages'
+import { InvoicesPanel } from '@/components/InvoicesPanel'
 import { ManageSubscription } from '@/components/ManageSubscription'
 import { Panel } from '@/components/Panel'
 import { ResourceTooltip } from '@/components/ResourceTooltip'
@@ -53,6 +54,7 @@ import { getTokenBalance } from '@/lib/tokens'
 import type {
   ApiErrorResponse,
   Entitlement,
+  Invoice,
   GroupSummary,
   Subscription,
   SubscriptionSummary,
@@ -246,10 +248,19 @@ export default function Home({
     }
   )
 
+  // Invoices only exist once the workspace holds a live subscription the user
+  // may see, so the key is null until then and SWR skips the request.
+  const invoices = useSWR<{ data: Invoice[] }>(
+    subscription.data?.subscription ? `/api/subscription/invoices?${qs}` : null,
+    fetcher,
+    { ...polling }
+  )
+
   function refresh() {
     void entitlements.mutate()
     void subscription.mutate()
     void group.mutate()
+    void invoices.mutate()
     void usage.mutate()
     void tokens.mutate()
   }
@@ -262,7 +273,7 @@ export default function Home({
     onSuccess: refresh,
   })
 
-  // Step 5 of the guide: the owner-scoped check returns what the owner's live
+  // The owner-scoped check returns what the owner's live
   // subscription grants this user, including the plan's meter and token slugs
   // with their type. No separate entitlement duplicates them. Both plans
   // meter Export PDF and allocate the AI assistant's tokens, each at its own
@@ -293,6 +304,7 @@ export default function Home({
     entitlements.isValidating ||
     subscription.isValidating ||
     group.isValidating ||
+    invoices.isValidating ||
     usage.isValidating ||
     tokens.isValidating
   const error =
@@ -363,7 +375,7 @@ export default function Home({
             <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
               Hybrid pricing demo: flat-rate, per-seat, metered and token line
               items combined on two plans, plus a plain entitlement on one of
-              them. Every panel maps to a step in the{' '}
+              them. Built by following the{' '}
               <a
                 className="cursor-pointer underline decoration-zinc-400 underline-offset-2 hover:decoration-current"
                 href="https://salable.app/docs/hybrid-pricing-quick-start?lang=sdk"
@@ -463,7 +475,7 @@ export default function Home({
           <>
             {/* A 2x2 grid: the entitlement-gated feature and the plan panel on top, the two consumption features (meter and token) below. */}
             <div className="grid gap-6 md:grid-cols-2">
-              {/* Step 5: Shared notebooks gates on a plain entitlement only Team grants. */}
+              {/* Shared notebooks gates on a plain entitlement only Team grants. */}
               <SharedNotebooksFeature
                 key={`notebooks-${qs}`}
                 granteeId={ctx.granteeId}
@@ -496,7 +508,7 @@ export default function Home({
                   </p>
                 </Panel>
               ) : (
-                // Step 3: checkout for the team's plan, or manage it once it
+                // Checkout for the team's plan, or manage it once it
                 // exists.
                 <PlanPanel
                   team={ctx.team}
@@ -508,7 +520,7 @@ export default function Home({
                 />
               )}
 
-              {/* Steps 4 and 5: Export PDF and the AI assistant gate on the meter and token the owner-scoped check returns, and do real work against Salable. */}
+              {/* Export PDF and the AI assistant gate on the meter and token the owner-scoped check returns, and do real work against Salable. */}
               <ExportPdfFeature
                 key={`export-${qs}`}
                 team={ctx.team}
@@ -533,7 +545,7 @@ export default function Home({
               />
             </div>
 
-            {/* Step 6: the owner's usage on the shared meter, billed at this plan's rate. Members only. */}
+            {/* The owner's usage on the shared meter, billed at this plan's rate. Members only. */}
             {!memberOnly && usage.data ? (
               <UsagePanel
                 team={ctx.team}
@@ -553,7 +565,16 @@ export default function Home({
               />
             ) : null}
 
-            {/* Step 2: the group behind the Team subscription, and who is in it. Members only. */}
+            {/* The invoices behind the live subscription, with Stripe's hosted and PDF links. Members only. */}
+            {liveSubscription ? (
+              <InvoicesPanel
+                invoices={invoices.data?.data}
+                error={invoices.error}
+                isLoading={invoices.isLoading}
+              />
+            ) : null}
+
+            {/* The group behind the Team subscription, and who is in it. Members only. */}
             {ctx.team === 'acme' && !memberOnly ? (
               <Panel
                 title={`${TEAM_NAME} members`}
@@ -688,7 +709,7 @@ function lockedHint({
 }
 
 /**
- * Step 3 of the guide: a Subscribe panel until the team's owner holds a live
+ * A Subscribe panel until the team's owner holds a live
  * subscription to the team's plan, then a Manage panel for that subscription.
  */
 function PlanPanel({
@@ -741,6 +762,8 @@ function PlanPanel({
         <ManageSubscription
           subscription={subscription}
           planName={name}
+          granteeId={granteeId}
+          team={team}
           onChange={onChange}
           onCancelled={onCancelled}
         />

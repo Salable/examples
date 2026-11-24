@@ -1,26 +1,34 @@
 import { getFormProps } from '@conform-to/react'
 import { useApiForm } from '@/hooks/useApiForm'
+import type { GranteeId, Team } from '@/lib/constants'
 import { autoRenewSchema, subscriptionIdSchema } from '@/lib/schemas'
 import type { Subscription } from '@/lib/types'
 import { Button } from './Button'
 import { FormMessages } from './FormMessages'
+import { PortalForm } from './PortalForm'
 
 type Props = {
   subscription: Subscription
   /** Used in the cancel confirmation. */
   planName: string
+  /** Identify the workspace whose owner the billing portal is opened for. */
+  granteeId: GranteeId
+  team: Team
   onChange: () => void
   /** Salable finishes the cancel when Stripe confirms it, so the page polls briefly. */
   onCancelled: () => void
 }
 
 /**
- * Cancel and auto-renew controls. Its own component because it owns two form
- * hooks and is only rendered while the team's subscription exists.
+ * Billing portal, auto-renew and cancel controls. Its own component because
+ * it owns several form hooks and is only rendered while the team's
+ * subscription exists.
  */
 export function ManageSubscription({
   subscription,
   planName,
+  granteeId,
+  team,
   onChange,
   onCancelled,
 }: Props) {
@@ -58,7 +66,7 @@ export function ManageSubscription({
         <dd>{subscription.cancelAtPeriodEnd ? 'Off' : 'On'}</dd>
       </dl>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <form {...getFormProps(autoRenew.form)} noValidate>
           <input
             type="hidden"
@@ -73,6 +81,7 @@ export function ManageSubscription({
           <Button
             type="submit"
             variant="secondary"
+            className="w-full"
             pending={autoRenew.pending}
             pendingLabel="Updating…"
           >
@@ -81,6 +90,8 @@ export function ManageSubscription({
               : 'Turn on auto-renew'}
           </Button>
         </form>
+
+        <PortalForm granteeId={granteeId} team={team} />
 
         <form {...getFormProps(cancel.form)} noValidate>
           <input
@@ -91,6 +102,7 @@ export function ManageSubscription({
           <Button
             type="submit"
             variant="danger"
+            className="w-full"
             pending={cancel.pending}
             pendingLabel="Cancelling…"
           >
